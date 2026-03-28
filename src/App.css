@@ -1,0 +1,306 @@
+/* ── CancerCompass Global Styles ── */
+:root {
+  --teal: #2a7c7c;
+  --teal-light: #3a9a9a;
+  --teal-pale: #e8f5f5;
+  --sage: #5a8a6a;
+  --navy: #1a3a4a;
+  --warm-white: #fafaf8;
+  --soft-gray: #f2f2ef;
+  --mid-gray: #8a8a85;
+  --dark: #2a2a28;
+  --warning-bg: #fef5e7;
+  --green: #27ae60;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--warm-white);
+  color: var(--dark);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.cc-header {
+  background: white;
+  border-bottom: 1px solid #e8e8e5;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+}
+
+.cc-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.cc-logo-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--teal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.cc-logo-text {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.cc-logo-text span { color: var(--teal); }
+
+.cc-profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--teal-pale);
+  border: 1px solid #c5e0e0;
+  border-radius: 20px;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--teal);
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.cc-profile-chip:hover { background: #d5ecec; }
+
+/* ── BUTTONS ── */
+.btn-primary {
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--teal-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(42,124,124,0.3);
+}
+
+.btn-find {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--sage) 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 18px 32px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-find:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(42,124,124,0.35);
+}
+
+.btn-outline {
+  background: none;
+  border: 1.5px solid var(--teal);
+  color: var(--teal);
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover { background: var(--teal-pale); }
+
+.btn-ghost {
+  background: var(--soft-gray);
+  border: none;
+  color: var(--dark);
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-ghost:hover { background: #e5e5e2; }
+
+.btn-apply {
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-apply:hover { background: var(--teal-light); }
+
+/* ── FORM ELEMENTS ── */
+.field-group { margin-bottom: 20px; }
+
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.optional-tag {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--mid-gray);
+  font-style: italic;
+}
+
+.required-star { color: var(--teal); font-size: 16px; }
+
+select, input[type="text"], input[type="email"], textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e0e0db;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--dark);
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238a8a85' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-color: white;
+  cursor: pointer;
+  padding-right: 36px;
+}
+
+select:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(42,124,124,0.12);
+}
+
+textarea { resize: vertical; min-height: 80px; }
+
+.form-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 24px 0;
+}
+
+.save-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 14px;
+  background: var(--soft-gray);
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.save-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.save-option-text { font-size: 14px; color: #5a5a55; line-height: 1.4; }
+
+/* ── TYPE TAGS ── */
+.type-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.tag-financial    { background: #e8f4fd; color: #1a6fa0; }
+.tag-transport    { background: #fef3e2; color: #b8690a; }
+.tag-housing      { background: #f0e8fd; color: #6a1ab8; }
+.tag-medication   { background: #e8fdf0; color: #0a8a40; }
+.tag-mental       { background: #fde8f0; color: #b81a60; }
+.tag-legal        { background: #f5f5e8; color: #6a6a0a; }
+.tag-nutrition    { background: #fff3e0; color: #e65100; }
+.tag-pediatric    { background: #e8f5e9; color: #2e7d32; }
+.tag-veterans     { background: #e8eaf6; color: #283593; }
+
+/* ── FOOTER ── */
+.cc-footer {
+  background: var(--navy);
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  padding: 20px 24px;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 40px;
+}
+
+.cc-footer strong { color: rgba(255,255,255,0.85); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-up { animation: fadeUp 0.4s ease; }
+
+/* ── MOBILE ── */
+@media (max-width: 480px) {
+  .cc-header { padding: 0 16px; }
+  .cc-logo-text { font-size: 17px; }
+}
