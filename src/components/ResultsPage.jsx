@@ -61,7 +61,7 @@ function Section({ emoji, title, resources, defaultOpen }) {
   );
 }
 
-export default function ResultsPage({ profile, onBack }) {
+export default function ResultsPage({ profile, onBack, onAbout }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [showSuggest, setShowSuggest] = useState(false);
 
@@ -168,7 +168,14 @@ export default function ResultsPage({ profile, onBack }) {
       <footer className="cc-footer">
         <strong>CancerCompass</strong><br />
         We do not endorse, recommend, or have any affiliation with the organizations listed.<br />
-        Always verify details directly with the organization before applying.
+        Always verify details directly with the organization before applying.<br />
+        <button onClick={onAbout} style={{
+          background: "none", border: "none", color: "rgba(255,255,255,0.6)",
+          fontFamily: "'DM Sans', sans-serif", fontSize: "12px",
+          cursor: "pointer", textDecoration: "underline", marginTop: "8px",
+        }}>
+          About CancerCompass
+        </button>
       </footer>
     </div>
   );
