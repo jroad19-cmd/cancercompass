@@ -4,7 +4,7 @@ import ResourceCard from "./ResourceCard";
 import SuggestForm from "./SuggestForm";
 import { loadSaved } from "./SavedResourcesPage";
 
-function Section({ emoji, title, resources, defaultOpen }) {
+function Section({ emoji, title, resources, defaultOpen, onSaveChange }) {
   const [open, setOpen] = useState(defaultOpen || false);
 
   return (
@@ -54,7 +54,7 @@ function Section({ emoji, title, resources, defaultOpen }) {
               No resources found for this filter.
             </p>
           ) : (
-            resources.map(r => <ResourceCard key={r.id} resource={r} onSaveChange={handleSaveChange} />)
+            resources.map(r => <ResourceCard key={r.id} resource={r} onSaveChange={onSaveChange} />)
           )}
         </div>
       )}
@@ -144,13 +144,13 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
         ) : (
           <>
             {national.length > 0 && (
-              <Section emoji="🏛️" title="National Programs" resources={national} />
+              <Section emoji="🏛️" title="National Programs" resources={national} onSaveChange={handleSaveChange} />
             )}
             {stateSpecific.length > 0 && (
-              <Section emoji="🗺️" title={`${profile.state} Programs`} resources={stateSpecific} />
+              <Section emoji="🗺️" title={`${profile.state} Programs`} resources={stateSpecific} onSaveChange={handleSaveChange} />
             )}
             {cancerSpecific.length > 0 && (
-              <Section emoji="💊" title={`${profile.cancerType} Programs`} resources={cancerSpecific} />
+              <Section emoji="💊" title={`${profile.cancerType} Programs`} resources={cancerSpecific} onSaveChange={handleSaveChange} />
             )}
           </>
         )}
