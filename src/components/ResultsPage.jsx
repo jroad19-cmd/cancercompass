@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { getFilteredResources, RESOURCE_TYPES } from "../data/resources";
 import ResourceCard from "./ResourceCard";
 import SuggestForm from "./SuggestForm";
+import { loadSaved } from "./SavedResourcesPage";
 
 function Section({ emoji, title, resources, defaultOpen }) {
   const [open, setOpen] = useState(defaultOpen || false);
@@ -53,7 +54,7 @@ function Section({ emoji, title, resources, defaultOpen }) {
               No resources found for this filter.
             </p>
           ) : (
-            resources.map(r => <ResourceCard key={r.id} resource={r} />)
+            resources.map(r => <ResourceCard key={r.id} resource={r} onSaveChange={handleSaveChange} />)
           )}
         </div>
       )}
@@ -61,9 +62,14 @@ function Section({ emoji, title, resources, defaultOpen }) {
   );
 }
 
-export default function ResultsPage({ profile, onBack, onAbout }) {
+export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [showSuggest, setShowSuggest] = useState(false);
+  const [savedCount, setSavedCount] = useState(() => loadSaved().length);
+
+  const handleSaveChange = useCallback(() => {
+    setSavedCount(loadSaved().length);
+  }, []);
 
   const { national, stateSpecific, cancerSpecific, total } =
     getFilteredResources(profile.cancerType, profile.state, typeFilter);
@@ -154,9 +160,31 @@ export default function ResultsPage({ profile, onBack, onAbout }) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           flexWrap: "wrap", gap: "12px", marginTop: "24px",
         }}>
-          <button className="btn-outline" onClick={() => setShowSuggest(true)}>
-            + Suggest a Resource
-          </button>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <button className="btn-outline" onClick={() => setShowSuggest(true)}>
+              + Suggest a Resource
+            </button>
+            {savedCount > 0 && (
+              <button
+                onClick={onViewSaved}
+                style={{
+                  background: "var(--teal)", color: "white", border: "none",
+                  borderRadius: "10px", padding: "11px 20px",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: "14px",
+                  fontWeight: 600, cursor: "pointer", transition: "all 0.2s",
+                  display: "flex", alignItems: "center", gap: "8px",
+                }}
+              >
+                🔖 My Saved Resources
+                <span style={{
+                  background: "rgba(255,255,255,0.25)", borderRadius: "12px",
+                  padding: "1px 8px", fontSize: "12px",
+                }}>
+                  {savedCount}
+                </span>
+              </button>
+            )}
+          </div>
           <button className="btn-ghost" onClick={onBack}>
             ← Edit My Profile
           </button>
