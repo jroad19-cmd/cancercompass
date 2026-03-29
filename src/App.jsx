@@ -4,6 +4,7 @@ import Onboarding from "./components/Onboarding";
 import LookupForm from "./components/LookupForm";
 import ResultsPage from "./components/ResultsPage";
 import AdminPage from "./components/AdminPage";
+import SavedResourcesPage from "./components/SavedResourcesPage";
 import { getActiveProfile, profileLabel } from "./components/ProfileManager";
 
 const ONBOARD_KEY = "cancercompass_onboarded";
@@ -131,6 +132,16 @@ export default function App() {
     window.scrollTo(0, 0);
   }
 
+  function handleViewSaved() {
+    setScreen("saved");
+    window.scrollTo(0, 0);
+  }
+
+  function handleBackToResults() {
+    setScreen("results");
+    window.scrollTo(0, 0);
+  }
+
   // ── Admin route ──
   if (isAdmin) {
     return (
@@ -193,7 +204,16 @@ export default function App() {
       )}
 
       {screen === "results" && profile && (
-        <ResultsPage profile={profile} onBack={handleBack} onAbout={() => setShowAbout(true)} />
+        <ResultsPage
+          profile={profile}
+          onBack={handleBack}
+          onAbout={() => setShowAbout(true)}
+          onViewSaved={handleViewSaved}
+        />
+      )}
+
+      {screen === "saved" && (
+        <SavedResourcesPage onBack={handleBackToResults} />
       )}
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
