@@ -49,11 +49,7 @@ export function deleteProfile(id) {
 export function profileLabel(p) {
   if (!p) return "My Profile";
   const name = p.firstName ? p.firstName.trim() : "";
-  const cancer = p.cancerType || "";
-  if (name && cancer) return `${name} — ${cancer}`;
-  if (name) return name;
-  if (cancer) return cancer;
-  return "My Profile";
+  return name || "My Profile";
 }
 
 export function generateId() {
