@@ -165,17 +165,17 @@ export default function App() {
             onClick={() => setShowAbout(true)}
             title="About CancerCompass"
             style={{
-              background: "none", border: "1.5px solid #e0e0db",
-              borderRadius: "50%", width: "32px", height: "32px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", fontSize: "15px", color: "var(--teal)",
-              fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-              transition: "all 0.2s", flexShrink: 0,
+              background: "var(--teal-pale)", border: "1.5px solid var(--teal)",
+              borderRadius: "8px", padding: "6px 12px",
+              display: "flex", alignItems: "center", gap: "6px",
+              cursor: "pointer", fontSize: "13px", color: "var(--teal)",
+              fontWeight: 600, fontFamily: "'DM Sans', sans-serif",
+              transition: "all 0.2s", flexShrink: 0, whiteSpace: "nowrap",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--teal-pale)"; e.currentTarget.style.borderColor = "var(--teal)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "none"; e.currentTarget.style.borderColor = "#e0e0db"; }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--teal)"; e.currentTarget.style.color = "white"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "var(--teal-pale)"; e.currentTarget.style.color = "var(--teal)"; }}
           >
-            ℹ
+            ℹ️ About
           </button>
           <div
             className="cc-profile-chip"
