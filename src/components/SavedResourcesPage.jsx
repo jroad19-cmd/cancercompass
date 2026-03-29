@@ -135,9 +135,12 @@ export default function SavedResourcesPage({ onBack }) {
                         </span>
                       )}
                     </div>
-                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="btn-apply">
-                      Learn More / Apply →
-                    </a>
+                    <button
+                      onClick={() => window.open(r.url, "_blank", "noopener,noreferrer")}
+                      className="btn-apply"
+                    >
+                      Learn More / Apply ↗
+                    </button>
                   </div>
                 </div>
               );
@@ -178,4 +181,3 @@ export default function SavedResourcesPage({ onBack }) {
     </div>
   );
 }
-
