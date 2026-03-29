@@ -101,9 +101,12 @@ export default function ResourceCard({ resource, onSaveChange }) {
               </span>
             )}
           </div>
-          <a href={resource.url} target="_blank" rel="noopener noreferrer" className="btn-apply">
-            Learn More / Apply →
-          </a>
+          <button
+            onClick={() => window.open(resource.url, "_blank", "noopener,noreferrer")}
+            className="btn-apply"
+          >
+            Learn More / Apply ↗
+          </button>
         </div>
       </div>
     </div>
