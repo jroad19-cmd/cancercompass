@@ -1,19 +1,17 @@
-// CancerCompass Resource Database
-// Each resource has:
-//   id, name, description, type, cancerTypes ([] = all cancers), states ([] = all states),
-//   qualifies, phone, url, lastReviewed
+// CancerCompass Resource Database — Version 2.0
+// Expanded: Common cancers, all national programs, all 50 states, rare/underserved cancers
 
 export const RESOURCE_TYPES = [
-  { value: "all", label: "All Types of Help" },
-  { value: "financial", label: "💰 Financial" },
+  { value: "all",            label: "All Types of Help" },
+  { value: "financial",      label: "💰 Financial" },
   { value: "transportation", label: "🚗 Transportation" },
-  { value: "housing", label: "🏠 Housing" },
-  { value: "medication", label: "💊 Medication" },
-  { value: "mental", label: "🧠 Mental Health" },
-  { value: "legal", label: "⚖️ Legal" },
-  { value: "nutrition", label: "🍎 Nutrition" },
-  { value: "pediatric", label: "👶 Pediatric" },
-  { value: "veterans", label: "🎖️ Veterans" },
+  { value: "housing",        label: "🏠 Housing" },
+  { value: "medication",     label: "💊 Medication" },
+  { value: "mental",         label: "🧠 Mental Health" },
+  { value: "legal",          label: "⚖️ Legal" },
+  { value: "nutrition",      label: "🍎 Nutrition" },
+  { value: "pediatric",      label: "👶 Pediatric" },
+  { value: "veterans",       label: "🎖️ Veterans" },
 ];
 
 export const TYPE_LABELS = {
@@ -29,35 +27,13 @@ export const TYPE_LABELS = {
 };
 
 export const CANCER_TYPES = [
-  "Bladder Cancer",
-  "Blood Cancer (General)",
-  "Brain / CNS Cancer",
-  "Breast Cancer",
-  "Cervical Cancer",
-  "Colon / Colorectal Cancer",
-  "Esophageal Cancer",
-  "Head & Neck Cancer",
-  "Kidney (Renal) Cancer",
-  "Leukemia (ALL)",
-  "Leukemia (AML)",
-  "Leukemia (CLL)",
-  "Leukemia (CML)",
-  "Liver Cancer",
-  "Lung Cancer (Non-Small Cell)",
-  "Lung Cancer (Small Cell)",
-  "Lymphoma (Hodgkin's)",
-  "Lymphoma (Non-Hodgkin's)",
-  "Melanoma / Skin Cancer",
-  "Mesothelioma",
-  "Multiple Myeloma",
-  "Ovarian Cancer",
-  "Pancreatic Cancer",
-  "Prostate Cancer",
-  "Sarcoma",
-  "Stomach / Gastric Cancer",
-  "Testicular Cancer",
-  "Thyroid Cancer",
-  "Uterine / Endometrial Cancer",
+  "Bladder Cancer","Blood Cancer (General)","Brain / CNS Cancer","Breast Cancer",
+  "Cervical Cancer","Colon / Colorectal Cancer","Esophageal Cancer","Head & Neck Cancer",
+  "Kidney (Renal) Cancer","Leukemia (ALL)","Leukemia (AML)","Leukemia (CLL)","Leukemia (CML)",
+  "Liver Cancer","Lung Cancer (Non-Small Cell)","Lung Cancer (Small Cell)",
+  "Lymphoma (Hodgkin's)","Lymphoma (Non-Hodgkin's)","Melanoma / Skin Cancer","Mesothelioma",
+  "Multiple Myeloma","Ovarian Cancer","Pancreatic Cancer","Prostate Cancer","Sarcoma",
+  "Stomach / Gastric Cancer","Testicular Cancer","Thyroid Cancer","Uterine / Endometrial Cancer",
   "Other / Rare Cancer (Not Listed)",
 ];
 
@@ -72,350 +48,162 @@ export const US_STATES = [
   "Wisconsin","Wyoming","Washington D.C.",
 ];
 
-export const TREATMENT_STATUSES = [
-  "Newly Diagnosed",
-  "In Treatment",
-  "Finished Treatment",
-  "Recurrence",
-];
-
-export const STAGES = [
-  "Stage 1","Stage 2","Stage 3","Stage 4","Unknown","Not Applicable",
-];
-
-export const AGE_RANGES = [
-  "Under 18","18–30","31–45","46–60","61–75","76+",
-];
-
-export const INSURANCE_STATUSES = [
-  "Insured (Private)","Uninsured","Medicare","Medicaid","VA Benefits","Other",
-];
-
-// ── RESOURCE DATABASE ──────────────────────────────────────────────────────
-// cancerTypes: [] means applies to ALL cancer types
-// states: [] means applies to ALL states (national)
+export const TREATMENT_STATUSES = ["Newly Diagnosed","In Treatment","Finished Treatment","Recurrence"];
+export const STAGES             = ["Stage 1","Stage 2","Stage 3","Stage 4","Unknown","Not Applicable"];
+export const AGE_RANGES         = ["Under 18","18–30","31–45","46–60","61–75","76+"];
+export const INSURANCE_STATUSES = ["Insured (Private)","Uninsured","Medicare","Medicaid","VA Benefits","Other"];
 
 export const resources = [
-  // ── NATIONAL ──
-  {
-    id: "n001",
-    name: "CancerCare — Financial Assistance & Counseling",
-    description: "Free professional counseling, support groups, and limited financial assistance for treatment-related costs. Available by phone, online, and in-person.",
-    type: "mental",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Any cancer patient or caregiver, regardless of income or insurance.",
-    phone: "1-800-813-4673",
-    url: "https://www.cancercare.org",
-    lastReviewed: "2026-02-15",
-  },
-  {
-    id: "n002",
-    name: "Patient Advocate Foundation — Copay Relief Fund",
-    description: "Helps cover insurance co-pays, co-insurance, and deductibles for cancer patients actively receiving treatment.",
-    type: "financial",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Insured cancer patients in active treatment; income requirements apply.",
-    phone: "1-800-532-5274",
-    url: "https://www.patientadvocate.org",
-    lastReviewed: "2026-03-01",
-  },
-  {
-    id: "n003",
-    name: "HealthWell Foundation — Premium Assistance",
-    description: "Helps cancer patients pay for health insurance premiums, co-pays, and other out-of-pocket costs so they can stay insured during treatment.",
-    type: "financial",
-    cancerTypes: [],
-    states: [],
-    qualifies: "U.S. residents with qualifying cancer diagnosis; income limits apply.",
-    phone: "1-800-675-8416",
-    url: "https://www.healthwellfoundation.org",
-    lastReviewed: "2026-01-20",
-  },
-  {
-    id: "n004",
-    name: "American Cancer Society — Road To Recovery",
-    description: "Volunteer-driven transportation program that gives cancer patients free rides to and from treatment appointments.",
-    type: "transportation",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Cancer patients who need transportation to treatment; availability varies by location.",
-    phone: "1-800-227-2345",
-    url: "https://www.cancer.org",
-    lastReviewed: "2026-02-10",
-  },
-  {
-    id: "n005",
-    name: "Joe's House — Lodging Near Treatment",
-    description: "Searchable directory of lodging options near cancer treatment centers across the U.S., many at reduced rates or free.",
-    type: "housing",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Any cancer patient traveling away from home for treatment.",
-    phone: "1-877-563-7468",
-    url: "https://www.joeshouse.org",
-    lastReviewed: "2026-01-15",
-  },
-  {
-    id: "n006",
-    name: "NeedyMeds — Prescription Assistance",
-    description: "Connects cancer patients to prescription assistance programs, free clinics, and drug discount cards to lower medication costs.",
-    type: "medication",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Any patient struggling to afford prescription medications.",
-    phone: "1-800-503-6897",
-    url: "https://www.needymeds.org",
-    lastReviewed: "2026-03-10",
-  },
-  {
-    id: "n007",
-    name: "Cancer Legal Resource Center",
-    description: "Free legal information and referrals for cancer patients facing employment discrimination, insurance denials, and disability issues.",
-    type: "legal",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Any cancer patient or survivor dealing with legal issues related to their diagnosis.",
-    phone: "1-866-843-2572",
-    url: "https://www.cancerlegalresources.org",
-    lastReviewed: "2026-02-01",
-  },
-  {
-    id: "n008",
-    name: "Meals on Wheels — Cancer Patient Support",
-    description: "Home-delivered meals for cancer patients who are unable to prepare food during treatment. Contact your local chapter for availability.",
-    type: "nutrition",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Cancer patients who are homebound or unable to prepare meals; availability varies by area.",
-    phone: "1-888-998-6325",
-    url: "https://www.mealsonwheelsamerica.org",
-    lastReviewed: "2026-01-25",
-  },
-  {
-    id: "n009",
-    name: "Children's Cancer Fund",
-    description: "Provides financial assistance, research funding, and family support for children diagnosed with cancer across the United States.",
-    type: "pediatric",
-    cancerTypes: [],
-    states: [],
-    qualifies: "Children under 18 diagnosed with cancer and their families.",
-    phone: "1-214-987-8816",
-    url: "https://www.childrenscancerfund.org",
-    lastReviewed: "2026-02-20",
-  },
-  {
-    id: "n010",
-    name: "VA National Oncology Program — Veterans Cancer Benefits",
-    description: "Comprehensive cancer care, treatment funding, and support services for U.S. military veterans diagnosed with cancer.",
-    type: "veterans",
-    cancerTypes: [],
-    states: [],
-    qualifies: "U.S. military veterans enrolled in VA healthcare with a cancer diagnosis.",
-    phone: "1-800-827-1000",
-    url: "https://www.va.gov/health-care/health-needs-conditions/cancer-care",
-    lastReviewed: "2026-03-05",
-  },
+  // NATIONAL — ALL CANCERS
+  { id:"n001", name:"CancerCare — Financial Assistance & Counseling", description:"Free professional counseling, support groups, and limited financial assistance for treatment-related costs including transportation and childcare.", type:"mental", cancerTypes:[], states:[], qualifies:"Any cancer patient or caregiver, regardless of income or insurance.", phone:"1-800-813-4673", url:"https://www.cancercare.org", lastReviewed:"2026-02-15" },
+  { id:"n002", name:"Patient Advocate Foundation — Copay Relief Fund", description:"Helps cover insurance co-pays, co-insurance, and deductibles for cancer patients actively receiving treatment.", type:"financial", cancerTypes:[], states:[], qualifies:"Insured cancer patients in active treatment; income requirements apply.", phone:"1-800-532-5274", url:"https://www.patientadvocate.org", lastReviewed:"2026-03-01" },
+  { id:"n003", name:"HealthWell Foundation — Premium & Copay Assistance", description:"Helps cancer patients pay for health insurance premiums, co-pays, and other out-of-pocket costs so they can stay insured during treatment.", type:"financial", cancerTypes:[], states:[], qualifies:"U.S. residents with qualifying cancer diagnosis; income limits apply.", phone:"1-800-675-8416", url:"https://www.healthwellfoundation.org", lastReviewed:"2026-01-20" },
+  { id:"n004", name:"American Cancer Society — Road To Recovery", description:"Volunteer-driven transportation program giving cancer patients free rides to and from treatment appointments across the U.S.", type:"transportation", cancerTypes:[], states:[], qualifies:"Cancer patients who need transportation to treatment; availability varies by location.", phone:"1-800-227-2345", url:"https://www.cancer.org", lastReviewed:"2026-02-10" },
+  { id:"n005", name:"Joe's House — Lodging Near Treatment Centers", description:"Searchable directory of lodging options near cancer treatment centers across the U.S., many at reduced rates or free for patients and families.", type:"housing", cancerTypes:[], states:[], qualifies:"Any cancer patient traveling away from home for treatment.", phone:"1-877-563-7468", url:"https://www.joeshouse.org", lastReviewed:"2026-01-15" },
+  { id:"n006", name:"NeedyMeds — Prescription Assistance Finder", description:"Connects cancer patients to prescription assistance programs, free clinics, and drug discount cards to lower medication costs nationwide.", type:"medication", cancerTypes:[], states:[], qualifies:"Any patient struggling to afford prescription medications.", phone:"1-800-503-6897", url:"https://www.needymeds.org", lastReviewed:"2026-03-10" },
+  { id:"n007", name:"Cancer Legal Resource Center", description:"Free legal information and referrals for cancer patients facing employment discrimination, insurance denials, and disability issues.", type:"legal", cancerTypes:[], states:[], qualifies:"Any cancer patient or survivor dealing with legal issues related to their diagnosis.", phone:"1-866-843-2572", url:"https://www.thedrlc.org/cancer", lastReviewed:"2026-02-01" },
+  { id:"n008", name:"Meals on Wheels — Cancer Patient Support", description:"Home-delivered meals for cancer patients who are unable to prepare food during treatment. Contact your local chapter for availability.", type:"nutrition", cancerTypes:[], states:[], qualifies:"Cancer patients who are homebound or unable to prepare meals; availability varies by area.", phone:"1-888-998-6325", url:"https://www.mealsonwheelsamerica.org", lastReviewed:"2026-01-25" },
+  { id:"n009", name:"Children's Cancer Fund", description:"Provides financial assistance, research funding, and family support for children diagnosed with cancer across the United States.", type:"pediatric", cancerTypes:[], states:[], qualifies:"Children under 18 diagnosed with cancer and their families.", phone:"1-214-987-8816", url:"https://www.childrenscancerfund.org", lastReviewed:"2026-02-20" },
+  { id:"n010", name:"VA National Oncology Program — Veterans Cancer Benefits", description:"Comprehensive cancer care, treatment funding, and support services for U.S. military veterans diagnosed with cancer.", type:"veterans", cancerTypes:[], states:[], qualifies:"U.S. military veterans enrolled in VA healthcare with a cancer diagnosis.", phone:"1-800-827-1000", url:"https://www.va.gov/health-care/health-needs-conditions/cancer-care", lastReviewed:"2026-03-05" },
+  { id:"n011", name:"Family Reach — Emergency Financial Assistance", description:"Emergency financial assistance for families with children or young adults impacted by cancer, covering rent, utilities, and treatment costs.", type:"financial", cancerTypes:[], states:[], qualifies:"Families with children or young adults in cancer treatment facing financial crisis.", phone:"1-617-534-1600", url:"https://www.familyreach.org", lastReviewed:"2026-02-18" },
+  { id:"n012", name:"Cancer Cartel — Living Expense Grants", description:"Grants for unmet living expenses including housing, food, travel, and childcare for cancer patients in active treatment or recently completed treatment.", type:"financial", cancerTypes:[], states:[], qualifies:"Cancer patients in active treatment or completed treatment within the last 12 months.", phone:null, url:"https://www.cancercartel.org", lastReviewed:"2026-02-28" },
+  { id:"n013", name:"PAN Foundation — Underinsured Patient Assistance", description:"Helps underinsured cancer patients afford their medications and treatment-related out-of-pocket costs through disease-specific assistance funds.", type:"medication", cancerTypes:[], states:[], qualifies:"Underinsured U.S. residents with a qualifying cancer diagnosis; income limits apply.", phone:"1-866-316-7263", url:"https://www.panfoundation.org", lastReviewed:"2026-03-08" },
+  { id:"n014", name:"CancerCare Co-Payment Assistance Foundation", description:"Covers insurance co-payments for cancer medications, helping patients access the treatments their doctors prescribe without financial barriers.", type:"financial", cancerTypes:[], states:[], qualifies:"Insured cancer patients who cannot afford co-payments for cancer medications.", phone:"1-866-552-6729", url:"https://www.cancercare.org/copayfoundation", lastReviewed:"2026-01-30" },
+  { id:"n015", name:"Triage Cancer — Legal & Financial Navigation", description:"Free educational resources and tools to help cancer patients navigate insurance, employment rights, disability benefits, and financial planning.", type:"legal", cancerTypes:[], states:[], qualifies:"Any cancer patient or caregiver in the United States.", phone:"1-424-258-4628", url:"https://www.triagecancer.org", lastReviewed:"2026-02-05" },
+  { id:"n016", name:"American Cancer Society — Hope Lodge", description:"Free lodging for cancer patients and caregivers who must travel far from home to receive treatment at nearby medical facilities.", type:"housing", cancerTypes:[], states:[], qualifies:"Cancer patients receiving treatment at least 40 miles from their home; eligibility criteria apply.", phone:"1-800-227-2345", url:"https://www.cancer.org/treatment/support-programs-and-services/patient-lodging/hope-lodge.html", lastReviewed:"2026-03-01" },
+  { id:"n017", name:"Livestrong — Benefits Navigation & Financial Guidance", description:"Free one-on-one support navigating disability benefits, insurance appeals, and financial assistance programs for cancer patients and survivors.", type:"financial", cancerTypes:[], states:[], qualifies:"Any cancer patient or survivor in the United States.", phone:"1-855-220-7777", url:"https://www.livestrong.org", lastReviewed:"2026-01-22" },
+  { id:"n018", name:"211 National Helpline — Local Cancer Support Referrals", description:"Free national helpline connecting cancer patients with local food banks, housing assistance, transportation, and financial support programs.", type:"financial", cancerTypes:[], states:[], qualifies:"Any U.S. resident needing help finding local support services.", phone:"2-1-1", url:"https://www.211.org", lastReviewed:"2026-03-10" },
+  { id:"n019", name:"SNAP (Food Stamps) — Food Assistance During Treatment", description:"Federal program providing monthly food benefits on an EBT card for low-income cancer patients and families who struggle to afford groceries.", type:"nutrition", cancerTypes:[], states:[], qualifies:"U.S. residents meeting income and household guidelines; cancer diagnosis may help qualify.", phone:"1-800-221-5689", url:"https://www.fns.usda.gov/snap", lastReviewed:"2026-02-14" },
+  { id:"n020", name:"Social Security Disability Insurance (SSDI)", description:"Monthly income benefits for cancer patients who can no longer work due to their diagnosis or treatment side effects.", type:"financial", cancerTypes:[], states:[], qualifies:"Cancer patients unable to work; must have paid Social Security taxes; application takes average 65 days.", phone:"1-800-772-1213", url:"https://www.ssa.gov/disability", lastReviewed:"2026-01-18" },
+  { id:"n021", name:"Ronald McDonald House — Family Lodging", description:"Free or low-cost lodging for families of children receiving cancer treatment at nearby hospitals, keeping families close during treatment.", type:"housing", cancerTypes:[], states:[], qualifies:"Families of children under 18 receiving cancer treatment at a nearby hospital.", phone:"1-630-623-7048", url:"https://www.rmhc.org", lastReviewed:"2026-02-22" },
+  { id:"n022", name:"Cancer Financial Assistance Coalition (CFAC)", description:"A coalition of organizations that helps cancer patients find and navigate financial assistance programs across the United States.", type:"financial", cancerTypes:[], states:[], qualifies:"Any cancer patient in the United States needing financial assistance.", phone:null, url:"https://www.cancerfac.org", lastReviewed:"2026-03-05" },
+  { id:"n023", name:"Allyson Whitney Foundation — Young Adult Cancer Grants", description:"Financial grants for young adults ages 16–36 with cancer covering medical bills, rent, utilities, and insurance premiums.", type:"financial", cancerTypes:[], states:[], qualifies:"Young adults ages 16–36 diagnosed with any cancer; financial need required.", phone:null, url:"https://www.allysonwhitney.org", lastReviewed:"2026-01-28" },
+  { id:"n024", name:"LIHEAP — Low Income Home Energy Assistance", description:"Federal program helping low-income cancer patients pay heating and cooling bills and avoid utility shutoffs during treatment.", type:"financial", cancerTypes:[], states:[], qualifies:"Low-income households including cancer patients; income limits vary by state.", phone:"1-866-674-6327", url:"https://www.acf.hhs.gov/ocs/programs/liheap", lastReviewed:"2026-02-10" },
 
-  // ── BREAST CANCER SPECIFIC ──
-  {
-    id: "bc001",
-    name: "Susan G. Komen Foundation — Financial Assistance",
-    description: "Direct financial assistance for breast cancer patients covering treatment co-pays, transportation, childcare, and other costs during active treatment.",
-    type: "financial",
-    cancerTypes: ["Breast Cancer"],
-    states: [],
-    qualifies: "Breast cancer patients currently in treatment with demonstrated financial need.",
-    phone: "1-877-465-6636",
-    url: "https://www.komen.org",
-    lastReviewed: "2026-01-30",
-  },
-  {
-    id: "bc002",
-    name: "Breastcancer.org — Peer Support Community",
-    description: "Free online community and helpline connecting breast cancer patients with others who have been through similar experiences. Available 24/7.",
-    type: "mental",
-    cancerTypes: ["Breast Cancer"],
-    states: [],
-    qualifies: "Anyone affected by breast cancer — patients, survivors, and caregivers.",
-    phone: null,
-    url: "https://www.breastcancer.org",
-    lastReviewed: "2026-03-12",
-  },
-  {
-    id: "bc003",
-    name: "Roche — Herceptin Patient Assistance Program",
-    description: "Free or reduced-cost Herceptin (trastuzumab) for HER2-positive breast cancer patients who cannot afford their medication.",
-    type: "medication",
-    cancerTypes: ["Breast Cancer"],
-    states: [],
-    qualifies: "HER2+ breast cancer patients who are uninsured or underinsured; income requirements apply.",
-    phone: "1-888-249-4918",
-    url: "https://www.genentech-access.com",
-    lastReviewed: "2026-02-08",
-  },
+  // BREAST CANCER
+  { id:"bc001", name:"Susan G. Komen Foundation — Financial Assistance", description:"Direct financial assistance for breast cancer patients covering treatment co-pays, transportation, childcare, and other costs during active treatment.", type:"financial", cancerTypes:["Breast Cancer"], states:[], qualifies:"Breast cancer patients currently in treatment with demonstrated financial need.", phone:"1-877-465-6636", url:"https://www.komen.org", lastReviewed:"2026-01-30" },
+  { id:"bc002", name:"Living Beyond Breast Cancer — Financial Grants", description:"One-time grants for basic living expenses to help decrease financial burden for breast cancer patients in active treatment.", type:"financial", cancerTypes:["Breast Cancer"], states:[], qualifies:"Breast cancer patients in active treatment with household income under 400% of federal poverty level.", phone:"1-855-807-6386", url:"https://www.lbbc.org", lastReviewed:"2026-03-16" },
+  { id:"bc003", name:"Breastcancer.org — Peer Support Community", description:"Free online community and helpline connecting breast cancer patients with others who have been through similar experiences, available 24/7.", type:"mental", cancerTypes:["Breast Cancer"], states:[], qualifies:"Anyone affected by breast cancer — patients, survivors, and caregivers.", phone:null, url:"https://www.breastcancer.org", lastReviewed:"2026-03-12" },
+  { id:"bc004", name:"Roche — Herceptin Patient Assistance Program", description:"Free or reduced-cost Herceptin (trastuzumab) for HER2-positive breast cancer patients who cannot afford their medication.", type:"medication", cancerTypes:["Breast Cancer"], states:[], qualifies:"HER2+ breast cancer patients who are uninsured or underinsured; income requirements apply.", phone:"1-888-249-4918", url:"https://www.genentech-access.com", lastReviewed:"2026-02-08" },
+  { id:"bc005", name:"The Pink Fund — Non-Medical Cost of Living Support", description:"Covers 90 days of non-medical living expenses such as mortgage, rent, utilities, and insurance premiums for breast cancer patients in active treatment.", type:"financial", cancerTypes:["Breast Cancer"], states:[], qualifies:"Breast cancer patients in active treatment for 90 days or less; income requirements apply.", phone:"1-877-234-7465", url:"https://www.thepinkfund.org", lastReviewed:"2026-02-20" },
 
-  // ── LUNG CANCER SPECIFIC ──
-  {
-    id: "lc001",
-    name: "LUNGevity Foundation — Financial & Emotional Support",
-    description: "Grants, peer mentoring, and support resources specifically for lung cancer patients and their families navigating diagnosis and treatment.",
-    type: "financial",
-    cancerTypes: ["Lung Cancer (Non-Small Cell)", "Lung Cancer (Small Cell)"],
-    states: [],
-    qualifies: "Lung cancer patients and their caregivers at any stage of diagnosis.",
-    phone: "1-312-407-6100",
-    url: "https://www.lungevity.org",
-    lastReviewed: "2026-02-25",
-  },
+  // LUNG CANCER
+  { id:"lc001", name:"LUNGevity Foundation — Financial & Emotional Support", description:"Grants, peer mentoring, and support resources specifically for lung cancer patients and their families at any stage of diagnosis.", type:"financial", cancerTypes:["Lung Cancer (Non-Small Cell)","Lung Cancer (Small Cell)"], states:[], qualifies:"Lung cancer patients and their caregivers at any stage of diagnosis.", phone:"1-312-407-6100", url:"https://www.lungevity.org", lastReviewed:"2026-02-25" },
+  { id:"lc002", name:"Lung Cancer Foundation of America — Patient Support", description:"Financial assistance, educational resources, and clinical trial guidance for lung cancer patients and families across the United States.", type:"financial", cancerTypes:["Lung Cancer (Non-Small Cell)","Lung Cancer (Small Cell)"], states:[], qualifies:"Lung cancer patients in the United States; financial need may be required.", phone:"1-844-835-4325", url:"https://www.lcfamerica.org", lastReviewed:"2026-01-15" },
 
-  // ── LEUKEMIA / LYMPHOMA SPECIFIC ──
-  {
-    id: "ll001",
-    name: "Leukemia & Lymphoma Society — Patient Aid",
-    description: "Financial assistance for treatment costs, co-pays, and travel expenses for patients with blood cancers including leukemia, lymphoma, and myeloma.",
-    type: "financial",
-    cancerTypes: ["Leukemia (ALL)","Leukemia (AML)","Leukemia (CLL)","Leukemia (CML)","Lymphoma (Hodgkin's)","Lymphoma (Non-Hodgkin's)","Multiple Myeloma"],
-    states: [],
-    qualifies: "Patients with a confirmed blood cancer diagnosis; income requirements apply.",
-    phone: "1-800-955-4572",
-    url: "https://www.lls.org",
-    lastReviewed: "2026-03-08",
-  },
+  // COLON CANCER
+  { id:"cc001", name:"Colorectal Cancer Alliance — Financial Assistance", description:"One-time financial grants of up to $200 for household bills, childcare, transportation, or food for colorectal cancer patients in need.", type:"financial", cancerTypes:["Colon / Colorectal Cancer"], states:[], qualifies:"Colorectal cancer patients in the U.S. with demonstrated financial need; limited awards monthly.", phone:"1-877-422-2030", url:"https://www.ccalliance.org", lastReviewed:"2026-02-12" },
+  { id:"cc002", name:"Meredith's Miracles — Young Adult Colon Cancer Aid", description:"Financial assistance for daily living expenses for young adults currently fighting colon cancer to help them focus on treatment.", type:"financial", cancerTypes:["Colon / Colorectal Cancer"], states:[], qualifies:"Young adults with colon cancer in active treatment facing financial hardship.", phone:null, url:"https://www.meredithsmiracles.com", lastReviewed:"2026-01-20" },
 
-  // ── PANCREATIC CANCER SPECIFIC ──
-  {
-    id: "pc001",
-    name: "Pancreatic Cancer Action Network — Patient Services",
-    description: "Financial grants, clinical trial matching, and one-on-one support from trained specialists for pancreatic cancer patients.",
-    type: "financial",
-    cancerTypes: ["Pancreatic Cancer"],
-    states: [],
-    qualifies: "Pancreatic cancer patients and their caregivers at any stage.",
-    phone: "1-877-272-6226",
-    url: "https://www.pancan.org",
-    lastReviewed: "2026-01-18",
-  },
+  // PROSTATE CANCER
+  { id:"pc001", name:"ZERO Cancer — Prostate Cancer Patient Support", description:"Copay assistance, free PSA screening locations, and financial support resources specifically for prostate cancer patients across the U.S.", type:"financial", cancerTypes:["Prostate Cancer"], states:[], qualifies:"Prostate cancer patients and those seeking screening in the United States.", phone:"1-888-245-9455", url:"https://www.zerocancer.org", lastReviewed:"2026-02-18" },
+  { id:"pc002", name:"Angel Foundation — Prostate Cancer Living Expense Aid", description:"Financial assistance for prostate cancer patients covering non-medical living expenses such as food, gas, utilities, and rent or mortgage.", type:"financial", cancerTypes:["Prostate Cancer"], states:[], qualifies:"Prostate cancer patients in active treatment with demonstrated financial need.", phone:null, url:"https://www.angelonline.org", lastReviewed:"2026-01-25" },
 
-  // ── TEXAS STATE RESOURCES ──
-  {
-    id: "tx001",
-    name: "Texas Cancer Council — Patient Assistance Fund",
-    description: "State-funded assistance for Texas residents facing cancer-related financial hardship, covering utilities, rent, food, and transportation during treatment.",
-    type: "financial",
-    cancerTypes: [],
-    states: ["Texas"],
-    qualifies: "Texas residents diagnosed with any cancer type; income limits apply.",
-    phone: "1-512-463-3190",
-    url: "https://www.texascancercouncil.org",
-    lastReviewed: "2026-02-14",
-  },
-  {
-    id: "tx002",
-    name: "Texas DSHS — Breast & Cervical Cancer Services",
-    description: "Free or low-cost breast cancer screening and treatment services for uninsured or underinsured Texas women through the state health department.",
-    type: "medication",
-    cancerTypes: ["Breast Cancer", "Cervical Cancer"],
-    states: ["Texas"],
-    qualifies: "Texas women 40+ who are uninsured or underinsured; income requirements apply.",
-    phone: "1-800-242-3247",
-    url: "https://www.dshs.texas.gov",
-    lastReviewed: "2026-01-22",
-  },
-  {
-    id: "tx003",
-    name: "UT MD Anderson — Financial Counseling Services",
-    description: "Free financial counseling and assistance navigating insurance, payment plans, and assistance programs for MD Anderson cancer patients.",
-    type: "financial",
-    cancerTypes: [],
-    states: ["Texas"],
-    qualifies: "Patients receiving treatment at UT MD Anderson Cancer Center.",
-    phone: "1-877-632-6789",
-    url: "https://www.mdanderson.org",
-    lastReviewed: "2026-03-02",
-  },
-  {
-    id: "tx004",
-    name: "Texas 2-1-1 — Local Cancer Support Referrals",
-    description: "Free statewide helpline connecting Texans with local cancer support services, food banks, transportation, and financial assistance programs.",
-    type: "financial",
-    cancerTypes: [],
-    states: ["Texas"],
-    qualifies: "Any Texas resident in need of local support services.",
-    phone: "2-1-1",
-    url: "https://www.211texas.org",
-    lastReviewed: "2026-02-28",
-  },
+  // LEUKEMIA / LYMPHOMA / MYELOMA
+  { id:"ll001", name:"Leukemia & Lymphoma Society — Patient Aid Program", description:"Financial assistance for treatment costs, co-pays, and travel expenses for patients with blood cancers including leukemia, lymphoma, and myeloma.", type:"financial", cancerTypes:["Leukemia (ALL)","Leukemia (AML)","Leukemia (CLL)","Leukemia (CML)","Lymphoma (Hodgkin's)","Lymphoma (Non-Hodgkin's)","Multiple Myeloma","Blood Cancer (General)"], states:[], qualifies:"Patients with a confirmed blood cancer diagnosis; income requirements apply.", phone:"1-800-955-4572", url:"https://www.lls.org", lastReviewed:"2026-03-08" },
+  { id:"ll002", name:"International Myeloma Foundation — Patient Support", description:"Disease education, financial assistance resources, and a nurse helpline specifically for multiple myeloma patients and their caregivers.", type:"financial", cancerTypes:["Multiple Myeloma"], states:[], qualifies:"Multiple myeloma patients and caregivers anywhere in the United States.", phone:"1-818-487-7455", url:"https://www.myeloma.org", lastReviewed:"2026-02-14" },
 
-  // ── CALIFORNIA STATE RESOURCES ──
-  {
-    id: "ca001",
-    name: "Cancer Prevention Institute of California",
-    description: "Research-backed programs and resources for California cancer patients, including screening navigation, financial counseling, and treatment support.",
-    type: "financial",
-    cancerTypes: [],
-    states: ["California"],
-    qualifies: "California residents with a cancer diagnosis.",
-    phone: "1-408-354-2153",
-    url: "https://www.cpic.org",
-    lastReviewed: "2026-02-05",
-  },
+  // PANCREATIC CANCER
+  { id:"panc001", name:"Pancreatic Cancer Action Network — Patient Services", description:"Financial grants, clinical trial matching, and one-on-one support from trained specialists for pancreatic cancer patients.", type:"financial", cancerTypes:["Pancreatic Cancer"], states:[], qualifies:"Pancreatic cancer patients and their caregivers at any stage.", phone:"1-877-272-6226", url:"https://www.pancan.org", lastReviewed:"2026-01-18" },
+  { id:"panc002", name:"Hirshberg Foundation — Pancreatic Cancer Patient Aid", description:"Grants for pancreatic cancer patients covering transportation, treatment costs, pain medication, home care, and childcare expenses.", type:"financial", cancerTypes:["Pancreatic Cancer"], states:[], qualifies:"Pancreatic cancer patients in the United States with demonstrated financial need.", phone:"1-310-473-5121", url:"https://www.pancreatic.org", lastReviewed:"2026-02-08" },
 
-  // ── NEW YORK STATE RESOURCES ──
-  {
-    id: "ny001",
-    name: "New York State Cancer Services Program",
-    description: "Free cancer screenings and diagnostic services for uninsured and underinsured New York residents through the state health department.",
-    type: "medication",
-    cancerTypes: [],
-    states: ["New York"],
-    qualifies: "Uninsured or underinsured New York residents who meet income guidelines.",
-    phone: "1-866-442-2262",
-    url: "https://www.health.ny.gov/diseases/cancer",
-    lastReviewed: "2026-01-10",
-  },
+  // OVARIAN CANCER
+  { id:"oc001", name:"National Ovarian Cancer Coalition — Financial Assistance", description:"One-time grants of up to $1,000 for non-medical expenses related to treatment and care for ovarian cancer patients.", type:"financial", cancerTypes:["Ovarian Cancer"], states:[], qualifies:"Ovarian, fallopian tube, or peritoneal cancer patients; income requirements apply.", phone:"1-888-682-7426", url:"https://www.ovarian.org", lastReviewed:"2026-02-02" },
+  { id:"oc002", name:"OvarCare — Ovarian Cancer Patient Grants", description:"Financial grants including a $200 cash grant, $100 gas card, and $100 grocery card, plus optional counseling for ovarian cancer patients.", type:"financial", cancerTypes:["Ovarian Cancer"], states:[], qualifies:"Ovarian cancer patients in the United States with demonstrated financial need.", phone:null, url:"https://www.ovarcare.org", lastReviewed:"2026-01-20" },
 
-  // ── FLORIDA STATE RESOURCES ──
-  {
-    id: "fl001",
-    name: "Florida Cancer Connect — Resource Navigator",
-    description: "Connects Florida cancer patients with local financial assistance, transportation, and support programs throughout the state.",
-    type: "financial",
-    cancerTypes: [],
-    states: ["Florida"],
-    qualifies: "Florida residents currently dealing with a cancer diagnosis.",
-    phone: "1-800-227-2345",
-    url: "https://www.floridacancerconnect.com",
-    lastReviewed: "2026-02-18",
-  },
+  // BRAIN CANCER
+  { id:"brain001", name:"National Brain Tumor Society — Patient Resources", description:"Financial assistance navigation, support groups, and educational resources for brain tumor and CNS cancer patients and their families.", type:"financial", cancerTypes:["Brain / CNS Cancer"], states:[], qualifies:"Brain tumor and CNS cancer patients and caregivers in the United States.", phone:"1-617-924-9997", url:"https://www.braintumor.org", lastReviewed:"2026-02-20" },
+
+  // MELANOMA
+  { id:"mel001", name:"Melanoma Research Foundation — Patient Support", description:"Financial support resources, clinical trial information, and peer support connections for melanoma patients and families.", type:"financial", cancerTypes:["Melanoma / Skin Cancer"], states:[], qualifies:"Melanoma patients and their caregivers in the United States.", phone:"1-800-673-1290", url:"https://www.melanoma.org", lastReviewed:"2026-01-28" },
+
+  // SARCOMA
+  { id:"sar001", name:"Sarcoma Foundation of America — Patient Grants", description:"Research funding and direct patient support grants for sarcoma patients facing financial hardship during treatment.", type:"financial", cancerTypes:["Sarcoma"], states:[], qualifies:"Sarcoma patients in active treatment in the United States.", phone:"1-301-253-8687", url:"https://www.curesarcoma.org", lastReviewed:"2026-02-10" },
+
+  // THYROID CANCER
+  { id:"thy001", name:"ThyCa — Thyroid Cancer Patient Support", description:"Free educational resources, support groups, and financial assistance navigation for thyroid cancer patients and survivors.", type:"mental", cancerTypes:["Thyroid Cancer"], states:[], qualifies:"Thyroid cancer patients and survivors anywhere in the United States.", phone:"1-877-588-7904", url:"https://www.thyca.org", lastReviewed:"2026-01-15" },
+
+  // MESOTHELIOMA
+  { id:"meso001", name:"Mesothelioma Applied Research Foundation", description:"Patient support, financial assistance navigation, and disease education for mesothelioma patients and their families.", type:"financial", cancerTypes:["Mesothelioma"], states:[], qualifies:"Mesothelioma patients and caregivers in the United States.", phone:"1-877-363-6376", url:"https://www.curemeso.org", lastReviewed:"2026-02-05" },
+
+  // RARE CANCERS
+  { id:"rare001", name:"Lois Merrill Foundation — Rare Cancer Medical Grants", description:"Medical assistance grants of up to $2,000 for patients in the U.S. diagnosed with a rare cancer, based on financial need. Applications open in May each year.", type:"financial", cancerTypes:["Other / Rare Cancer (Not Listed)"], states:[], qualifies:"U.S. residents diagnosed with a rare cancer; financial need required; apply in May.", phone:null, url:"https://www.loismerrillfoundation.org", lastReviewed:"2026-01-10" },
+
+  // ALL 50 STATES + DC
+  { id:"al001", name:"Alabama Breast & Cervical Cancer Early Detection Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Alabama women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Alabama"], qualifies:"Alabama women who are uninsured or underinsured; income requirements apply.", phone:"1-800-252-1818", url:"https://www.alabamapublichealth.gov/cancer", lastReviewed:"2026-01-20" },
+  { id:"ak001", name:"Alaska Native Tribal Health Consortium — Cancer Care", description:"Cancer screening, treatment support, and financial navigation for Alaska residents including Alaska Native and rural communities.", type:"financial", cancerTypes:[], states:["Alaska"], qualifies:"Alaska residents with a cancer diagnosis; Alaska Native individuals may have additional eligibility.", phone:"1-907-729-1900", url:"https://www.anthc.org/cancer-care", lastReviewed:"2026-01-15" },
+  { id:"az001", name:"Arizona Cancer Coalition — Patient Resources", description:"Connects Arizona cancer patients to local financial assistance, transportation, and support programs statewide.", type:"financial", cancerTypes:[], states:["Arizona"], qualifies:"Arizona residents with a cancer diagnosis.", phone:"1-602-364-1553", url:"https://www.arizonacancercoalition.org", lastReviewed:"2026-02-01" },
+  { id:"ar001", name:"Arkansas Breast Cancer Control Program", description:"Free breast cancer screenings and follow-up diagnostic services for uninsured or underinsured Arkansas women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Arkansas"], qualifies:"Arkansas women 40+ who are uninsured or underinsured; income limits apply.", phone:"1-501-661-2595", url:"https://www.healthy.arkansas.gov/programs-services/topics/breast-cervical-cancer", lastReviewed:"2026-01-18" },
+  { id:"ca001", name:"Every Woman Counts — California Free Cancer Screening", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured California women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["California"], qualifies:"California women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-511-2300", url:"https://www.dhcs.ca.gov/services/cancer", lastReviewed:"2026-02-05" },
+  { id:"ca002", name:"Cancer Prevention Institute of California", description:"Research-backed programs and resources for California cancer patients including screening navigation and financial counseling.", type:"financial", cancerTypes:[], states:["California"], qualifies:"California residents with a cancer diagnosis.", phone:"1-408-354-2153", url:"https://www.cpic.org", lastReviewed:"2026-02-05" },
+  { id:"co001", name:"Colorado Cancer Screening Program", description:"Free or low-cost cancer screenings and diagnostic services for uninsured and underinsured Colorado residents.", type:"medication", cancerTypes:[], states:["Colorado"], qualifies:"Colorado residents who are uninsured or underinsured; income limits apply.", phone:"1-303-692-2500", url:"https://cdphe.colorado.gov/cancer", lastReviewed:"2026-01-22" },
+  { id:"ct001", name:"Connecticut Breast & Cervical Cancer Early Detection", description:"Free breast and cervical cancer screenings and diagnostic services for Connecticut women with low incomes and little or no health insurance.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Connecticut"], qualifies:"Connecticut women who are uninsured or underinsured; income requirements apply.", phone:"1-860-509-8000", url:"https://portal.ct.gov/DPH/Cancer-Registry/Cancer", lastReviewed:"2026-01-15" },
+  { id:"de001", name:"Delaware Cancer Consortium — Patient Navigation", description:"Patient navigation and financial assistance resources for Delaware cancer patients connecting them to local and state support programs.", type:"financial", cancerTypes:[], states:["Delaware"], qualifies:"Delaware residents with a cancer diagnosis.", phone:"1-302-744-4700", url:"https://www.delawarecancer.org", lastReviewed:"2026-01-20" },
+  { id:"fl001", name:"Florida Breast & Cervical Cancer Early Detection Program", description:"Free breast and cervical cancer screenings and follow-up services for uninsured Florida women through the state health department.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Florida"], qualifies:"Florida women who are uninsured or underinsured; income and age requirements apply.", phone:"1-877-888-5740", url:"https://www.floridahealth.gov/diseases-and-conditions/cancer", lastReviewed:"2026-02-18" },
+  { id:"ga001", name:"Georgia Cancer State Aid Program", description:"Free cancer screening, diagnosis, and treatment services for uninsured or underinsured Georgia residents who meet income guidelines.", type:"financial", cancerTypes:[], states:["Georgia"], qualifies:"Georgia residents who are uninsured or underinsured and meet income guidelines; must apply through a participating cancer hospital.", phone:"1-404-463-5111", url:"https://dph.georgia.gov/cancer-aid", lastReviewed:"2026-02-10" },
+  { id:"hi001", name:"Hawaii Cancer Consortium — Patient Support", description:"Cancer screening programs, financial navigation, and local support resources for Hawaii cancer patients across all islands.", type:"financial", cancerTypes:[], states:["Hawaii"], qualifies:"Hawaii residents with a cancer diagnosis.", phone:"1-808-586-4661", url:"https://health.hawaii.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"id001", name:"Idaho Breast & Cervical Health Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or low-income Idaho women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Idaho"], qualifies:"Idaho women who are uninsured or have low income; age requirements apply.", phone:"1-208-334-5945", url:"https://healthandwelfare.idaho.gov/cancer", lastReviewed:"2026-01-15" },
+  { id:"il001", name:"Illinois Comprehensive Cancer Control Program", description:"State-funded cancer prevention, screening, and patient support resources for Illinois residents with cancer diagnoses.", type:"financial", cancerTypes:[], states:["Illinois"], qualifies:"Illinois residents with a cancer diagnosis.", phone:"1-217-785-2060", url:"https://dph.illinois.gov/topics-services/diseases-and-conditions/cancer", lastReviewed:"2026-02-01" },
+  { id:"in001", name:"Indiana State Department of Health — Cancer Programs", description:"Free breast and cervical cancer screenings and cancer control resources for uninsured and underinsured Indiana residents.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Indiana"], qualifies:"Indiana women who are uninsured or underinsured; income and age requirements apply.", phone:"1-317-233-7400", url:"https://www.in.gov/isdh/19470.htm", lastReviewed:"2026-01-20" },
+  { id:"ia001", name:"Iowa Cancer Consortium — Patient Resources", description:"Financial assistance referrals, patient navigation, and cancer support resources across the state of Iowa.", type:"financial", cancerTypes:[], states:["Iowa"], qualifies:"Iowa residents with a cancer diagnosis.", phone:"1-515-243-9840", url:"https://www.iowacancerconsortium.org", lastReviewed:"2026-01-22" },
+  { id:"ks001", name:"Kansas Early Detection Works — Cancer Screening", description:"Free breast and cervical cancer screenings for uninsured or underinsured Kansas women through the state health department.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Kansas"], qualifies:"Kansas women who are uninsured or underinsured; income and age limits apply.", phone:"1-785-296-1207", url:"https://www.kdheks.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"ky001", name:"Kentucky Women's Cancer Screening Program", description:"Free breast and cervical cancer screenings and follow-up diagnostic services for uninsured or underinsured Kentucky women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Kentucky"], qualifies:"Kentucky women who are uninsured or underinsured; income requirements apply.", phone:"1-502-564-3236", url:"https://chfs.ky.gov/agencies/dph/dphps/owh/Pages/cancerscreening.aspx", lastReviewed:"2026-01-20" },
+  { id:"la001", name:"Louisiana Breast & Cervical Health Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured Louisiana women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Louisiana"], qualifies:"Louisiana women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-256-2452", url:"https://ldh.la.gov/page/breast-cervical-health-program", lastReviewed:"2026-01-15" },
+  { id:"me001", name:"Maine Breast & Cervical Health Program", description:"Free breast and cervical cancer screenings and follow-up services for Maine women with no or limited insurance coverage.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Maine"], qualifies:"Maine women who are uninsured or underinsured; income requirements apply.", phone:"1-207-287-4488", url:"https://www.maine.gov/dhhs/mecdc/population-health-wellness/cancer", lastReviewed:"2026-01-18" },
+  { id:"md001", name:"Maryland Cancer Fund — Financial Assistance", description:"State-funded financial assistance for Maryland cancer patients who cannot afford treatment-related costs.", type:"financial", cancerTypes:[], states:["Maryland"], qualifies:"Maryland residents with a cancer diagnosis who demonstrate financial need.", phone:"1-410-767-6490", url:"https://health.maryland.gov/cancer", lastReviewed:"2026-02-05" },
+  { id:"ma001", name:"Massachusetts Breast & Cervical Cancer Initiative", description:"Free or reduced-cost breast and cervical cancer screenings for uninsured or underinsured Massachusetts women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Massachusetts"], qualifies:"Massachusetts women who are uninsured or underinsured; income and age requirements apply.", phone:"1-617-624-5070", url:"https://www.mass.gov/cancer-screening", lastReviewed:"2026-01-22" },
+  { id:"mi001", name:"Michigan Breast & Cervical Cancer Control Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Michigan women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Michigan"], qualifies:"Michigan women who are uninsured or underinsured; income and age limits apply.", phone:"1-800-922-6266", url:"https://www.michigan.gov/mdhhs/adult-child-serv/childrenfamilies/wic/cancer-screening", lastReviewed:"2026-01-20" },
+  { id:"mn001", name:"Minnesota SAGE Program — Cancer Screening", description:"Free breast, cervical, and colorectal cancer screenings for uninsured or underinsured Minnesota residents.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer","Colon / Colorectal Cancer"], states:["Minnesota"], qualifies:"Minnesota residents who are uninsured or underinsured; income and age requirements apply.", phone:"1-651-201-5600", url:"https://www.health.state.mn.us/diseases/cancer/sage", lastReviewed:"2026-02-01" },
+  { id:"ms001", name:"Mississippi Breast & Cervical Cancer Early Detection Program", description:"Free breast and cervical cancer screenings for uninsured or low-income Mississippi women through the state health department.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Mississippi"], qualifies:"Mississippi women who are uninsured or have low income; age requirements apply.", phone:"1-601-576-7400", url:"https://msdh.ms.gov/msdhsite/index.cfm/41,0,150,html", lastReviewed:"2026-01-18" },
+  { id:"mo001", name:"Missouri Show Me Healthy Women Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Missouri women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Missouri"], qualifies:"Missouri women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-883-7693", url:"https://health.mo.gov/living/healthcondiseases/cancer", lastReviewed:"2026-01-20" },
+  { id:"mt001", name:"Montana Cancer Control Program", description:"Cancer screening programs and patient navigation services for Montana residents with cancer diagnoses.", type:"financial", cancerTypes:[], states:["Montana"], qualifies:"Montana residents with a cancer diagnosis.", phone:"1-406-444-2544", url:"https://dphhs.mt.gov/publichealth/cancer", lastReviewed:"2026-01-15" },
+  { id:"ne001", name:"Nebraska Every Woman Matters — Cancer Screening", description:"Free breast, cervical, and colorectal cancer screenings for uninsured or underinsured Nebraska women and men.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer","Colon / Colorectal Cancer"], states:["Nebraska"], qualifies:"Nebraska residents who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-532-2227", url:"https://dhhs.ne.gov/Pages/Every-Woman-Matters.aspx", lastReviewed:"2026-02-01" },
+  { id:"nv001", name:"Nevada Comprehensive Cancer Control Program", description:"State cancer screening programs, patient navigation, and financial assistance referrals for Nevada cancer patients.", type:"financial", cancerTypes:[], states:["Nevada"], qualifies:"Nevada residents with a cancer diagnosis.", phone:"1-775-684-4200", url:"https://dpbh.nv.gov/Programs/Cancer/Cancer_-_Home", lastReviewed:"2026-01-22" },
+  { id:"nh001", name:"New Hampshire Cancer Program — Screening & Support", description:"Free breast and cervical cancer screenings and patient support resources for uninsured New Hampshire women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["New Hampshire"], qualifies:"New Hampshire women who are uninsured or underinsured; income and age requirements apply.", phone:"1-603-271-4502", url:"https://www.dhhs.nh.gov/programs-services/disease-prevention/cancer", lastReviewed:"2026-01-18" },
+  { id:"nj001", name:"New Jersey Cancer Education & Early Detection Program", description:"Free breast, cervical, and colorectal cancer screenings for uninsured or underinsured New Jersey residents.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer","Colon / Colorectal Cancer"], states:["New Jersey"], qualifies:"New Jersey residents who are uninsured or underinsured; income and age requirements apply.", phone:"1-609-984-6000", url:"https://www.nj.gov/health/ces/cancer-programs", lastReviewed:"2026-02-05" },
+  { id:"nm001", name:"New Mexico Breast & Cervical Cancer Program", description:"Free breast and cervical cancer screenings and follow-up services for uninsured or low-income New Mexico women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["New Mexico"], qualifies:"New Mexico women who are uninsured or have low income; age requirements apply.", phone:"1-505-476-3580", url:"https://www.nmhealth.org/about/phd/dcpho/canp", lastReviewed:"2026-01-20" },
+  { id:"ny001", name:"New York State Cancer Services Program", description:"Free cancer screenings and diagnostic services for uninsured and underinsured New York State residents.", type:"medication", cancerTypes:[], states:["New York"], qualifies:"Uninsured or underinsured New York State residents who meet income guidelines.", phone:"1-866-442-2262", url:"https://www.health.ny.gov/diseases/cancer", lastReviewed:"2026-01-10" },
+  { id:"nc001", name:"North Carolina Breast & Cervical Cancer Control Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured North Carolina women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["North Carolina"], qualifies:"North Carolina women who are uninsured or underinsured; income and age requirements apply.", phone:"1-919-707-5300", url:"https://www.ncdhhs.gov/cancer", lastReviewed:"2026-01-22" },
+  { id:"nd001", name:"North Dakota Women's Way — Cancer Screening", description:"Free breast and cervical cancer screenings and diagnostic follow-up for uninsured or underinsured North Dakota women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["North Dakota"], qualifies:"North Dakota women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-449-6636", url:"https://www.health.nd.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"oh001", name:"Ohio Breast & Cervical Cancer Project", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Ohio women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Ohio"], qualifies:"Ohio women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-282-6522", url:"https://odh.ohio.gov/know-our-programs/cancer-prevention", lastReviewed:"2026-02-01" },
+  { id:"ok001", name:"Oklahoma Breast & Cervical Cancer Program", description:"Free breast and cervical cancer screenings and follow-up diagnostic services for uninsured Oklahoma women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Oklahoma"], qualifies:"Oklahoma women who are uninsured or have low income; age requirements apply.", phone:"1-405-271-4072", url:"https://oklahoma.gov/health/disease-prevention/cancer.html", lastReviewed:"2026-01-20" },
+  { id:"or001", name:"Oregon Breast & Cervical Cancer Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Oregon women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Oregon"], qualifies:"Oregon women who are uninsured or underinsured; income and age requirements apply.", phone:"1-503-988-3646", url:"https://www.oregon.gov/oha/PH/DISEASESCONDITIONS/CANCER", lastReviewed:"2026-01-22" },
+  { id:"pa001", name:"Pennsylvania Breast & Cervical Cancer Early Detection Program", description:"Free breast and cervical cancer screenings and diagnostic follow-up for uninsured or underinsured Pennsylvania women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Pennsylvania"], qualifies:"Pennsylvania women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-215-7494", url:"https://www.health.pa.gov/topics/disease/cancer", lastReviewed:"2026-02-05" },
+  { id:"ri001", name:"Rhode Island Breast & Cervical Cancer Early Detection Program", description:"Free breast and cervical cancer screenings for uninsured or low-income Rhode Island women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Rhode Island"], qualifies:"Rhode Island women who are uninsured or have low income; age requirements apply.", phone:"1-401-222-2300", url:"https://health.ri.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"sc001", name:"South Carolina Best Chance Network — Cancer Screening", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured South Carolina women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["South Carolina"], qualifies:"South Carolina women who are uninsured or underinsured; income and age requirements apply.", phone:"1-803-898-3432", url:"https://www.scdhec.gov/health/chronic-disease/cancer", lastReviewed:"2026-01-20" },
+  { id:"sd001", name:"South Dakota Breast & Cervical Cancer Screening Program", description:"Free breast and cervical cancer screenings for uninsured or low-income South Dakota women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["South Dakota"], qualifies:"South Dakota women who are uninsured or have low income; age requirements apply.", phone:"1-605-773-3361", url:"https://doh.sd.gov/diseases/chronic/cancer", lastReviewed:"2026-01-15" },
+  { id:"tn001", name:"Tennessee Breast & Cervical Screening Program", description:"Free breast and cervical cancer screenings and follow-up diagnostic services for uninsured Tennessee women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Tennessee"], qualifies:"Tennessee women who are uninsured or underinsured; income and age requirements apply.", phone:"1-615-741-7247", url:"https://www.tn.gov/health/health-program-areas/fhw/cancer.html", lastReviewed:"2026-01-20" },
+  { id:"tx001", name:"Texas Cancer Council — Patient Assistance Fund", description:"State-funded assistance for Texas residents facing cancer-related financial hardship, covering utilities, rent, food, and transportation during treatment.", type:"financial", cancerTypes:[], states:["Texas"], qualifies:"Texas residents diagnosed with any cancer type; income limits apply.", phone:"1-512-463-3190", url:"https://www.texascancercouncil.org", lastReviewed:"2026-02-14" },
+  { id:"tx002", name:"Texas DSHS — Breast & Cervical Cancer Services", description:"Free or low-cost breast cancer screening and treatment services for uninsured or underinsured Texas women through the state health department.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Texas"], qualifies:"Texas women 40+ who are uninsured or underinsured; income requirements apply.", phone:"1-800-242-3247", url:"https://www.dshs.texas.gov", lastReviewed:"2026-01-22" },
+  { id:"tx003", name:"UT MD Anderson — Financial Counseling Services", description:"Free financial counseling and assistance navigating insurance, payment plans, and assistance programs for MD Anderson cancer patients.", type:"financial", cancerTypes:[], states:["Texas"], qualifies:"Patients receiving treatment at UT MD Anderson Cancer Center.", phone:"1-877-632-6789", url:"https://www.mdanderson.org", lastReviewed:"2026-03-02" },
+  { id:"tx004", name:"Texas 2-1-1 — Local Cancer Support Referrals", description:"Free statewide helpline connecting Texans with local cancer support services, food banks, transportation, and financial assistance programs.", type:"financial", cancerTypes:[], states:["Texas"], qualifies:"Any Texas resident in need of local support services.", phone:"2-1-1", url:"https://www.211texas.org", lastReviewed:"2026-02-28" },
+  { id:"ut001", name:"Utah Breast & Cervical Cancer Screening Program", description:"Free breast and cervical cancer screenings for uninsured or low-income Utah women through the state health department.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Utah"], qualifies:"Utah women who are uninsured or have low income; age requirements apply.", phone:"1-801-538-6003", url:"https://health.utah.gov/cancer", lastReviewed:"2026-01-22" },
+  { id:"vt001", name:"Vermont Cancer Screening Program", description:"Free breast, cervical, and colorectal cancer screenings for uninsured or low-income Vermont residents.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer","Colon / Colorectal Cancer"], states:["Vermont"], qualifies:"Vermont residents who are uninsured or have low income; age requirements apply.", phone:"1-800-508-2222", url:"https://www.healthvermont.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"va001", name:"Virginia's Breast & Cervical Cancer Control Program", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Virginia women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Virginia"], qualifies:"Virginia women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-533-9339", url:"https://www.vdh.virginia.gov/cancer", lastReviewed:"2026-02-01" },
+  { id:"wa001", name:"Washington State Breast & Cervical Health Program", description:"Free breast and cervical cancer screenings and follow-up diagnostic services for uninsured Washington women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Washington"], qualifies:"Washington women who are uninsured or underinsured; income and age requirements apply.", phone:"1-360-236-3595", url:"https://www.doh.wa.gov/cancer", lastReviewed:"2026-01-20" },
+  { id:"wv001", name:"West Virginia Breast & Cervical Cancer Screening Program", description:"Free breast and cervical cancer screenings for uninsured or low-income West Virginia women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["West Virginia"], qualifies:"West Virginia women who are uninsured or have low income; age requirements apply.", phone:"1-304-558-0684", url:"https://dhhr.wv.gov/cancer", lastReviewed:"2026-01-18" },
+  { id:"wi001", name:"Wisconsin Well Woman Program — Cancer Screening", description:"Free breast and cervical cancer screenings and diagnostic services for uninsured or underinsured Wisconsin women.", type:"medication", cancerTypes:["Breast Cancer","Cervical Cancer"], states:["Wisconsin"], qualifies:"Wisconsin women who are uninsured or underinsured; income and age requirements apply.", phone:"1-800-722-2295", url:"https://www.dhs.wisconsin.gov/cancer", lastReviewed:"2026-02-01" },
+  { id:"wy001", name:"Wyoming Cancer Program — Screening & Patient Support", description:"Free cancer screenings and patient navigation services for Wyoming residents with cancer diagnoses.", type:"financial", cancerTypes:[], states:["Wyoming"], qualifies:"Wyoming residents with a cancer diagnosis.", phone:"1-307-777-6186", url:"https://health.wyo.gov/publichealth/cancer", lastReviewed:"2026-01-15" },
+  { id:"dc001", name:"DC Cancer Consortium — Patient Resources", description:"Cancer screening programs, financial navigation, and local support resources for Washington D.C. cancer patients.", type:"financial", cancerTypes:[], states:["Washington D.C."], qualifies:"Washington D.C. residents with a cancer diagnosis.", phone:"1-202-442-9141", url:"https://dchealth.dc.gov/service/cancer-prevention-and-control", lastReviewed:"2026-01-22" },
 ];
 
-// ── FILTER FUNCTION ────────────────────────────────────────────────────────
 export function getFilteredResources(cancerType, state, typeFilter = "all") {
   const filtered = resources.filter(r => {
-    const matchesCancer =
-      r.cancerTypes.length === 0 || r.cancerTypes.includes(cancerType);
-    const matchesState =
-      r.states.length === 0 || r.states.includes(state);
-    const matchesType =
-      typeFilter === "all" || r.type === typeFilter;
+    const matchesCancer = r.cancerTypes.length === 0 || r.cancerTypes.includes(cancerType);
+    const matchesState  = r.states.length === 0 || r.states.includes(state);
+    const matchesType   = typeFilter === "all" || r.type === typeFilter;
     return matchesCancer && matchesState && matchesType;
   });
 
-  const national = filtered.filter(r => r.states.length === 0 && r.cancerTypes.length === 0);
-  const stateSpecific = filtered.filter(r => r.states.includes(state));
-  const cancerSpecific = filtered.filter(
-    r => r.cancerTypes.includes(cancerType) && r.states.length === 0
-  );
-
-  // sort each group by type
-  const sortByType = arr => [...arr].sort((a, b) => a.type.localeCompare(b.type));
+  const national       = filtered.filter(r => r.states.length === 0 && r.cancerTypes.length === 0);
+  const stateSpecific  = filtered.filter(r => r.states.includes(state));
+  const cancerSpecific = filtered.filter(r => r.cancerTypes.includes(cancerType) && r.states.length === 0);
+  const sortByType     = arr => [...arr].sort((a, b) => a.type.localeCompare(b.type));
 
   return {
-    national: sortByType(national),
-    stateSpecific: sortByType(stateSpecific),
-    cancerSpecific: sortByType(cancerSpecific),
+    national:        sortByType(national),
+    stateSpecific:   sortByType(stateSpecific),
+    cancerSpecific:  sortByType(cancerSpecific),
     total: national.length + stateSpecific.length + cancerSpecific.length,
   };
 }
