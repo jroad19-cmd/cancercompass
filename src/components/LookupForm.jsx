@@ -309,11 +309,13 @@ export default function LookupForm({ onResults, onAbout }) {
         CancerCompass provides this information as a free public service. We do not endorse, recommend, or have any affiliation with the organizations listed.<br />
         Always verify details directly with the organization before applying.<br />
         <button onClick={onAbout} style={{
-          background: "none", border: "none", color: "rgba(255,255,255,0.6)",
-          fontFamily: "'DM Sans', sans-serif", fontSize: "12px",
-          cursor: "pointer", textDecoration: "underline", marginTop: "8px",
+          background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+          borderRadius: "8px", color: "white",
+          fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+          cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          transition: "background 0.2s",
         }}>
-          About CancerCompass
+          ℹ️ About CancerCompass
         </button>
       </footer>
     </div>
