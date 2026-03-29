@@ -235,6 +235,9 @@ export default function LookupForm({ onResults }) {
             placeholder="e.g. Mary"
             style={{ padding: "12px 16px" }}
           />
+          <p style={{ fontSize: "13px", color: "var(--mid-gray)", marginTop: "6px" }}>
+            This name will be used to identify your saved profile.
+          </p>
         </div>
 
         {/* Required fields */}
