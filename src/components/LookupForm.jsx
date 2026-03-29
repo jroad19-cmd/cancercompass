@@ -23,6 +23,7 @@ export default function LookupForm({ onResults }) {
   const [profiles,      setProfiles]     = useState([]);
   const [showProfiles,  setShowProfiles] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [errors,        setErrors]       = useState({});
 
   useEffect(() => {
@@ -64,6 +65,7 @@ export default function LookupForm({ onResults }) {
     setActiveProfileId(p.id);
     setProfiles(loadProfiles());
     setShowProfiles(false);
+    setEditingProfile(false);
   }
 
   function startNewProfile() {
@@ -71,9 +73,18 @@ export default function LookupForm({ onResults }) {
               treatmentStatus: "", stage: "", ageRange: "", insuranceStatus: "" });
     setSaveProfile(false);
     setShowProfiles(false);
+    setEditingProfile(false);
   }
 
   function confirmDelete(id) { setDeleteConfirm(id); }
+
+  function editProfile(p) {
+    setForm(p);
+    setSaveProfile(true);
+    setActiveProfileId(p.id);
+    setEditingProfile(true);
+    setShowProfiles(false);
+  }
 
   function doDelete(id) {
     deleteProfile(id);
@@ -141,15 +152,21 @@ export default function LookupForm({ onResults }) {
               <div key={p.id} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "12px 14px", border: "1.5px solid #e8e8e4", borderRadius: "10px",
-                marginBottom: "8px", cursor: "pointer",
+                marginBottom: "8px",
               }}>
-                <span onClick={() => switchToProfile(p)} style={{ flex: 1, fontWeight: 500, color: "var(--navy)" }}>
+                <span onClick={() => switchToProfile(p)} style={{ flex: 1, fontWeight: 500, color: "var(--navy)", cursor: "pointer" }}>
                   👤 {profileLabel(p)}
                 </span>
-                <button onClick={() => confirmDelete(p.id)} style={{
-                  background: "none", border: "none", color: "#cc3333", cursor: "pointer",
-                  fontSize: "13px", fontFamily: "'DM Sans', sans-serif",
-                }}>Delete</button>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button onClick={() => editProfile(p)} style={{
+                    background: "none", border: "none", color: "var(--teal)", cursor: "pointer",
+                    fontSize: "13px", fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+                  }}>Edit</button>
+                  <button onClick={() => confirmDelete(p.id)} style={{
+                    background: "none", border: "none", color: "#cc3333", cursor: "pointer",
+                    fontSize: "13px", fontFamily: "'DM Sans', sans-serif",
+                  }}>Delete</button>
+                </div>
               </div>
             ))}
             <button onClick={() => setShowProfiles(false)} className="btn-ghost" style={{ width: "100%", marginTop: "8px" }}>
@@ -194,7 +211,33 @@ export default function LookupForm({ onResults }) {
         marginBottom: "0",
       }} className="fade-up">
 
-        {/* Required field */}
+        {/* Editing banner */}
+        {editingProfile && (
+          <div style={{
+            background: "var(--teal-pale)", border: "1px solid #c5e0e0",
+            borderRadius: "10px", padding: "12px 16px", marginBottom: "20px",
+            fontSize: "14px", color: "var(--teal)", display: "flex",
+            alignItems: "center", gap: "8px",
+          }}>
+            ✏️ <span>Editing profile — update any field including your name, then hit Save & Find Resources.</span>
+          </div>
+        )}
+
+        {/* First name field — always visible */}
+        <div className="field-group">
+          <div className="field-label">
+            Your first name <span className="optional-tag">(optional)</span>
+          </div>
+          <input
+            type="text"
+            value={form.firstName || ""}
+            onChange={e => set("firstName", e.target.value)}
+            placeholder="e.g. Mary"
+            style={{ padding: "12px 16px" }}
+          />
+        </div>
+
+        {/* Required fields */}
         <div className="field-group">
           <div className="field-label"><span className="required-star">✦</span> What type of cancer?</div>
           <select value={form.cancerType} onChange={e => set("cancerType", e.target.value)}>
@@ -254,7 +297,7 @@ export default function LookupForm({ onResults }) {
         </label>
 
         <button className="btn-find" onClick={handleSubmit}>
-          Find Resources →
+          {editingProfile ? "Save & Find Resources →" : "Find Resources →"}
         </button>
       </div>
 
