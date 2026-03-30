@@ -3,6 +3,7 @@ import { resources as allResources, TYPE_LABELS, CANCER_TYPES, US_STATES, RESOUR
 import { loadFeedback } from "./FeedbackForm";
 
 const REVIEWED_KEY = "cancercompass_reviewed_dates";
+const SUGGEST_KEY  = "cancercompass_suggestions";
 
 function loadReviewedDates() {
   try {
