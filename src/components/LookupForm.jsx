@@ -7,6 +7,7 @@ import {
   loadProfiles, getActiveProfile, saveProfile,
   setActiveProfileId, profileLabel, generateId, deleteProfile,
 } from "./ProfileManager";
+import FeedbackForm from "./FeedbackForm";
 
 export default function LookupForm({ onResults, onAbout }) {
   const [form, setForm] = useState({
@@ -25,6 +26,7 @@ export default function LookupForm({ onResults, onAbout }) {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [errors,        setErrors]       = useState({});
+  const [showFeedback,  setShowFeedback] = useState(false);
 
   useEffect(() => {
     const active = getActiveProfile();
@@ -307,16 +309,27 @@ export default function LookupForm({ onResults, onAbout }) {
       <footer className="cc-footer">
         <strong>CancerCompass</strong><br />
         CancerCompass is a free public resource created and maintained by an individual volunteer who lost his wife of 47 years to cancer and would like to help as many cancer patients as possible. It is not a medical organization, licensed healthcare provider, or legal entity. The information provided is for general informational purposes only and does not constitute medical, legal, or financial advice. We do not verify the current status of individual programs before each visit — always contact organizations directly to confirm availability and eligibility. CancerCompass is not responsible for the accuracy, completeness, or availability of any listed resource. Use of this site is at your own risk. We do not endorse, recommend, or have any affiliation with the organizations listed.<br /><br />
-        <button onClick={onAbout} style={{
-          background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
-          borderRadius: "8px", color: "white",
-          fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
-          cursor: "pointer", marginTop: "14px", padding: "8px 18px",
-          transition: "background 0.2s",
-        }}>
-          ℹ️ About CancerCompass
-        </button>
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={onAbout} style={{
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+            borderRadius: "8px", color: "white",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          }}>
+            ℹ️ About CancerCompass
+          </button>
+          <button onClick={() => setShowFeedback(true)} style={{
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+            borderRadius: "8px", color: "white",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          }}>
+            💬 Send Feedback
+          </button>
+        </div>
       </footer>
+
+      {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
     </div>
   );
 }
