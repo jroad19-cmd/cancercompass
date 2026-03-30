@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { getFilteredResources, RESOURCE_TYPES } from "../data/resources";
 import ResourceCard from "./ResourceCard";
-import SuggestForm from "./SuggestForm";
+import FeedbackForm from "./FeedbackForm";
 import { loadSaved } from "./SavedResourcesPage";
 
 function Section({ emoji, title, resources, defaultOpen, onSaveChange }) {
@@ -64,7 +64,7 @@ function Section({ emoji, title, resources, defaultOpen, onSaveChange }) {
 
 export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
   const [typeFilter, setTypeFilter] = useState("all");
-  const [showSuggest, setShowSuggest] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [savedCount, setSavedCount] = useState(() => loadSaved().length);
 
   const handleSaveChange = useCallback(() => {
@@ -161,8 +161,8 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
           flexWrap: "wrap", gap: "12px", marginTop: "24px",
         }}>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <button className="btn-outline" onClick={() => setShowSuggest(true)}>
-              + Suggest a Resource
+            <button className="btn-outline" onClick={() => setShowFeedback(true)}>
+              💬 Send Feedback
             </button>
             {savedCount > 0 && (
               <button
@@ -191,7 +191,7 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
         </div>
       </div>
 
-      {showSuggest && <SuggestForm onClose={() => setShowSuggest(false)} />}
+      {showFeedback && <FeedbackForm onClose={() => setShowFeedback(false)} />}
 
       <footer className="cc-footer">
         <strong>CancerCompass</strong><br />
