@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-const FEEDBACK_KEY = "cancercompass_feedback";
-const FORMSPREE_URL = "https://formspree.io/f/mqegqydg";
+const FEEDBACK_KEY  = "cancercompass_feedback";
+const W3F_KEY       = "44135a04-921d-4e63-aaf9-23b866af045e";
+const W3F_URL       = "https://api.web3forms.com/submit";
 
 export function loadFeedback() {
   try {
@@ -37,21 +38,22 @@ export default function FeedbackForm({ onClose }) {
     };
     localStorage.setItem(FEEDBACK_KEY, JSON.stringify([...existing, entry]));
 
-    // Send to Formspree (email notification)
+    // Send to Web3Forms (email notification — 250/month free)
     try {
-      await fetch(FORMSPREE_URL, {
+      await fetch(W3F_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify({
-          feedbackType:  form.type,
-          resourceName:  form.resourceName || "N/A",
-          description:   form.description,
-          submittedAt:   new Date().toLocaleString(),
+          access_key:   W3F_KEY,
+          subject:      `CancerCompass Feedback — ${form.type}`,
+          feedbackType: form.type,
+          resourceName: form.resourceName || "N/A",
+          description:  form.description,
+          submittedAt:  new Date().toLocaleString(),
         }),
       });
     } catch (err) {
-      // Still show success — local save worked even if email failed
-      console.error("Formspree error:", err);
+      console.error("Web3Forms error:", err);
     }
 
     setSending(false);
