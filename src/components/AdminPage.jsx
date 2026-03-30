@@ -2,7 +2,25 @@ import { useState, useEffect } from "react";
 import { resources as allResources, TYPE_LABELS, CANCER_TYPES, US_STATES, RESOURCE_TYPES } from "../data/resources";
 import { loadFeedback } from "./FeedbackForm";
 
-const SUGGEST_KEY = "cancercompass_suggestions";
+const REVIEWED_KEY = "cancercompass_reviewed_dates";
+
+function loadReviewedDates() {
+  try {
+    const raw = localStorage.getItem(REVIEWED_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveReviewedDate(id) {
+  const dates = loadReviewedDates();
+  dates[id] = new Date().toISOString().split("T")[0];
+  localStorage.setItem(REVIEWED_KEY, JSON.stringify(dates));
+  return dates;
+}
+
+function getEffectiveDate(r, reviewedDates) {
+  return reviewedDates[r.id] || r.lastReviewed;
+}
 
 function daysSince(dateStr) {
   if (!dateStr) return 999;
@@ -26,6 +44,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState("submissions");
   const [suggestions, setSuggestions] = useState([]);
   const [feedback, setFeedback] = useState([]);
+  const [reviewedDates, setReviewedDates] = useState(() => loadReviewedDates());
   const [declineConfirm, setDeclineConfirm] = useState(null);
 
   useEffect(() => {
@@ -243,22 +262,24 @@ export default function AdminPage() {
       {tab === "rechecks" && (
         <div>
           <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "16px" }}>
-            Resources are listed from most overdue to most recent. Click the link to verify, then mark as reviewed.
+            Resources listed from most overdue to most recent. Click <strong>Visit →</strong> to check the link, then click <strong>✓ Mark as Reviewed</strong>. If a link is broken, go to the Manage Resources tab to update or remove it.
           </p>
           {[...allResources]
-            .sort((a, b) => daysSince(b.lastReviewed) - daysSince(a.lastReviewed))
+            .sort((a, b) => daysSince(getEffectiveDate(b, reviewedDates)) - daysSince(getEffectiveDate(a, reviewedDates)))
             .map(r => {
-              const status = reviewStatus(r.lastReviewed);
+              const effectiveDate = getEffectiveDate(r, reviewedDates);
+              const status = reviewStatus(effectiveDate);
               return (
                 <div key={r.id} style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   flexWrap: "wrap", gap: "12px",
-                  border: "1.5px solid #e8e8e4", borderRadius: "10px",
+                  border: `1.5px solid ${status.label.includes("Up to date") ? "#d0ead0" : "#e8e8e4"}`,
+                  borderRadius: "10px",
                   padding: "14px 18px", marginBottom: "8px", background: "white",
                 }}>
                   <div style={{ flex: 1, minWidth: "200px" }}>
                     <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--navy)", marginBottom: "4px" }}>{r.name}</div>
-                    <div style={{ fontSize: "12px", color: "var(--mid-gray)" }}>Last reviewed: {formatDate(r.lastReviewed)}</div>
+                    <div style={{ fontSize: "12px", color: "var(--mid-gray)" }}>Last reviewed: {formatDate(effectiveDate)}</div>
                   </div>
                   <span style={{
                     background: status.bg, color: status.color,
@@ -267,12 +288,30 @@ export default function AdminPage() {
                   }}>
                     {status.label}
                   </span>
-                  <a href={r.url} target="_blank" rel="noopener noreferrer" style={{
-                    fontSize: "13px", color: "var(--teal)", textDecoration: "underline",
-                    whiteSpace: "nowrap",
-                  }}>
-                    Visit →
-                  </a>
+                  <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: "13px", color: "var(--teal)", textDecoration: "underline", whiteSpace: "nowrap" }}
+                    >
+                      Visit →
+                    </a>
+                    <button
+                      onClick={() => {
+                        const updated = saveReviewedDate(r.id);
+                        setReviewedDates({ ...updated });
+                      }}
+                      style={{
+                        background: "var(--teal)", color: "white", border: "none",
+                        borderRadius: "8px", padding: "6px 14px",
+                        fontFamily: "'DM Sans', sans-serif", fontSize: "12px",
+                        fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                      }}
+                    >
+                      ✓ Mark as Reviewed
+                    </button>
+                  </div>
                 </div>
               );
             })}
