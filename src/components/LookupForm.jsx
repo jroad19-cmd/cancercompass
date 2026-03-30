@@ -306,8 +306,7 @@ export default function LookupForm({ onResults, onAbout }) {
 
       <footer className="cc-footer">
         <strong>CancerCompass</strong><br />
-        CancerCompass provides this information as a free public service. We do not endorse, recommend, or have any affiliation with the organizations listed.<br />
-        Always verify details directly with the organization before applying.<br />
+        CancerCompass is a free public resource created and maintained by an individual volunteer who lost his wife of 47 years to cancer and would like to help as many cancer patients as possible. It is not a medical organization, licensed healthcare provider, or legal entity. The information provided is for general informational purposes only and does not constitute medical, legal, or financial advice. We do not verify the current status of individual programs before each visit — always contact organizations directly to confirm availability and eligibility. CancerCompass is not responsible for the accuracy, completeness, or availability of any listed resource. Use of this site is at your own risk. We do not endorse, recommend, or have any affiliation with the organizations listed.<br /><br />
         <button onClick={onAbout} style={{
           background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
           borderRadius: "8px", color: "white",
