@@ -178,6 +178,11 @@ export default function SavedResourcesPage({ onBack }) {
           </div>
         </div>
       )}
+
+      <footer className="cc-footer">
+        <strong>CancerCompass</strong><br />
+        CancerCompass is a free public resource created and maintained by an individual volunteer who lost his wife of 47 years to cancer and would like to help as many cancer patients as possible. It is not a medical organization, licensed healthcare provider, or legal entity. The information provided is for general informational purposes only and does not constitute medical, legal, or financial advice. Always contact organizations directly to confirm availability and eligibility. We do not endorse, recommend, or have any affiliation with the organizations listed.
+      </footer>
     </div>
   );
 }
