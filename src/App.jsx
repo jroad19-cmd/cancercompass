@@ -7,8 +7,10 @@ import AdminPage from "./components/AdminPage";
 import SavedResourcesPage from "./components/SavedResourcesPage";
 import { getActiveProfile, profileLabel } from "./components/ProfileManager";
 
-const ONBOARD_KEY = "cancercompass_onboarded";
-const ADMIN_PATH  = "/admin";
+const ONBOARD_KEY  = "cancercompass_onboarded";
+const ADMIN_PATH   = "/admin-cc-jroad19-2026";
+const ADMIN_PASS   = "2022Frontier";
+const ADMIN_UNLOCK = "cancercompass_admin_unlocked";
 
 const aboutScreens = [
   {
@@ -103,6 +105,94 @@ function AboutModal({ onClose }) {
   );
 }
 
+function AdminGate() {
+  const [unlocked, setUnlocked] = useState(() => sessionStorage.getItem(ADMIN_UNLOCK) === "1");
+  const [input,    setInput]    = useState("");
+  const [error,    setError]    = useState(false);
+
+  function attempt() {
+    if (input === ADMIN_PASS) {
+      sessionStorage.setItem(ADMIN_UNLOCK, "1");
+      setUnlocked(true);
+    } else {
+      setError(true);
+      setInput("");
+      setTimeout(() => setError(false), 2000);
+    }
+  }
+
+  if (unlocked) return (
+    <>
+      <header className="cc-header">
+        <button className="cc-logo" onClick={() => window.location.href = "/"} style={{ background: "none", border: "none" }}>
+          <div className="cc-logo-icon">🧭</div>
+          <span className="cc-logo-text">Cancer<span>Compass</span></span>
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ fontSize: "13px", color: "var(--mid-gray)", fontWeight: 500 }}>Admin</span>
+          <button
+            onClick={() => { sessionStorage.removeItem(ADMIN_UNLOCK); window.location.reload(); }}
+            style={{
+              background: "none", border: "1px solid #e0e0db", borderRadius: "8px",
+              padding: "5px 12px", fontSize: "12px", color: "var(--mid-gray)",
+              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+            }}
+          >
+            Lock
+          </button>
+        </div>
+      </header>
+      <AdminPage />
+    </>
+  );
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(145deg, #1a3a4a 0%, #2a7c7c 60%, #3a9a6a 100%)",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: "24px",
+    }}>
+      <div style={{
+        background: "white", borderRadius: "24px", padding: "40px 36px",
+        maxWidth: "360px", width: "100%", textAlign: "center",
+        boxShadow: "0 24px 64px rgba(0,0,0,0.2)",
+      }}>
+        <div style={{ fontSize: "40px", marginBottom: "16px" }}>🔐</div>
+        <h2 style={{ fontFamily: "'Lora', serif", fontSize: "22px", color: "var(--navy)", marginBottom: "8px" }}>
+          Admin Access
+        </h2>
+        <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "24px" }}>
+          Enter your admin password to continue.
+        </p>
+        <input
+          type="password"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && attempt()}
+          placeholder="Password"
+          style={{
+            width: "100%", padding: "12px 16px", marginBottom: "12px",
+            border: `1.5px solid ${error ? "#cc3333" : "#e0e0db"}`,
+            borderRadius: "10px", fontSize: "15px",
+            fontFamily: "'DM Sans', sans-serif",
+            boxSizing: "border-box",
+            outline: "none",
+          }}
+          autoFocus
+        />
+        {error && (
+          <p style={{ color: "#cc3333", fontSize: "13px", marginBottom: "10px" }}>
+            Incorrect password. Please try again.
+          </p>
+        )}
+        <button className="btn-primary" onClick={attempt}>
+          Enter
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const isAdmin = window.location.pathname === ADMIN_PATH;
 
@@ -144,18 +234,7 @@ export default function App() {
 
   // ── Admin route ──
   if (isAdmin) {
-    return (
-      <>
-        <header className="cc-header">
-          <button className="cc-logo" onClick={() => window.location.href = "/"}>
-            <div className="cc-logo-icon">🧭</div>
-            <span className="cc-logo-text">Cancer<span>Compass</span></span>
-          </button>
-          <span style={{ fontSize: "13px", color: "var(--mid-gray)", fontWeight: 500 }}>Admin</span>
-        </header>
-        <AdminPage />
-      </>
-    );
+    return <AdminGate />;
   }
 
   // ── Onboarding ──
