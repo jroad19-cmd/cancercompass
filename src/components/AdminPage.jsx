@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { resources as allResources, TYPE_LABELS, CANCER_TYPES, US_STATES, RESOURCE_TYPES } from "../data/resources";
+import { loadFeedback } from "./FeedbackForm";
 
 const SUGGEST_KEY = "cancercompass_suggestions";
 
@@ -24,11 +25,13 @@ function formatDate(str) {
 export default function AdminPage() {
   const [tab, setTab] = useState("submissions");
   const [suggestions, setSuggestions] = useState([]);
+  const [feedback, setFeedback] = useState([]);
   const [declineConfirm, setDeclineConfirm] = useState(null);
 
   useEffect(() => {
     const raw = localStorage.getItem(SUGGEST_KEY);
     setSuggestions(raw ? JSON.parse(raw) : []);
+    setFeedback(loadFeedback());
   }, []);
 
   function saveSuggestions(updated) {
@@ -45,12 +48,14 @@ export default function AdminPage() {
     setDeclineConfirm(null);
   }
 
-  const pending   = suggestions.filter(s => s.status === "pending");
-  const overdue   = allResources.filter(r => daysSince(r.lastReviewed) >= 60);
-  const showBanner = pending.length > 0 || overdue.length > 0;
+  const pending      = suggestions.filter(s => s.status === "pending");
+  const pendingFeedback = feedback.filter(f => f.status === "pending");
+  const overdue      = allResources.filter(r => daysSince(r.lastReviewed) >= 60);
+  const showBanner   = pending.length > 0 || overdue.length > 0 || pendingFeedback.length > 0;
 
   const tabs = [
-    { key: "submissions", label: `Review Submissions${pending.length ? ` (${pending.length})` : ""}` },
+    { key: "submissions", label: `Resource Submissions${pending.length ? ` (${pending.length})` : ""}` },
+    { key: "feedback",    label: `Feedback${pendingFeedback.length ? ` (${pendingFeedback.length})` : ""}` },
     { key: "rechecks",    label: "Re-check Resources" },
     { key: "manage",      label: "Manage Resources" },
   ];
@@ -72,7 +77,10 @@ export default function AdminPage() {
         }}>
           <div style={{ fontWeight: 600, color: "#7a5a20", marginBottom: "6px" }}>⚠️ Action needed</div>
           {pending.length > 0 && (
-            <div style={{ fontSize: "14px", color: "#7a5a20" }}>• {pending.length} submission{pending.length > 1 ? "s" : ""} waiting for review</div>
+            <div style={{ fontSize: "14px", color: "#7a5a20" }}>• {pending.length} resource submission{pending.length > 1 ? "s" : ""} waiting for review</div>
+          )}
+          {pendingFeedback.length > 0 && (
+            <div style={{ fontSize: "14px", color: "#7a5a20" }}>• {pendingFeedback.length} feedback message{pendingFeedback.length > 1 ? "s" : ""} waiting for review</div>
           )}
           {overdue.length > 0 && (
             <div style={{ fontSize: "14px", color: "#7a5a20" }}>• {overdue.length} resource{overdue.length > 1 ? "s" : ""} need a re-check</div>
@@ -146,7 +154,59 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── TAB 2: Re-checks ── */}
+      {/* ── TAB 2: Feedback ── */}
+      {tab === "feedback" && (
+        <div>
+          <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "16px" }}>
+            All feedback submitted by users — errors, suggestions, feature requests, and other messages.
+          </p>
+          {feedback.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "48px 24px", color: "var(--mid-gray)" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>💬</div>
+              <p style={{ fontSize: "15px" }}>No feedback received yet.</p>
+            </div>
+          ) : (
+            [...feedback].reverse().map(f => {
+              const typeColors = {
+                error:       { bg: "#fde8e8", color: "#cc3333", label: "🔴 Error Report" },
+                resource:    { bg: "var(--teal-pale)", color: "var(--teal)", label: "➕ Resource Suggestion" },
+                improvement: { bg: "#fef5e7", color: "#b8690a", label: "💡 Improvement" },
+                other:       { bg: "var(--soft-gray)", color: "var(--mid-gray)", label: "💬 Other" },
+              };
+              const style = typeColors[f.type] || typeColors.other;
+              return (
+                <div key={f.id} style={{
+                  border: "1.5px solid #e8e8e4", borderRadius: "12px",
+                  padding: "18px", marginBottom: "12px", background: "white",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px", flexWrap: "wrap", gap: "8px" }}>
+                    <span style={{
+                      background: style.bg, color: style.color,
+                      borderRadius: "8px", padding: "4px 12px",
+                      fontSize: "13px", fontWeight: 600,
+                    }}>
+                      {style.label}
+                    </span>
+                    <span style={{ fontSize: "12px", color: "var(--mid-gray)" }}>
+                      {formatDate(f.submittedAt)}
+                    </span>
+                  </div>
+                  {f.resourceName && (
+                    <div style={{ fontSize: "13px", color: "var(--navy)", fontWeight: 600, marginBottom: "6px" }}>
+                      Resource: {f.resourceName}
+                    </div>
+                  )}
+                  <p style={{ fontSize: "14px", color: "#5a5a55", lineHeight: 1.6 }}>
+                    {f.description}
+                  </p>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 3: Re-checks ── */}
       {tab === "rechecks" && (
         <div>
           <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "16px" }}>
@@ -186,7 +246,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ── TAB 3: Manage ── */}
+      {/* ── TAB 4: Manage ── */}
       {tab === "manage" && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
