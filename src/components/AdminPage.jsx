@@ -41,6 +41,144 @@ function formatDate(str) {
   return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+// ── MANAGE TAB ─────────────────────────────────────────────────────────────
+const OVERRIDES_KEY = "cancercompass_resource_overrides";
+
+function loadOverrides() {
+  try { return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function ManageTab() {
+  const [overrides, setOverrides] = useState(() => loadOverrides());
+  const [editing,   setEditing]   = useState(null); // resource being edited
+  const [editForm,  setEditForm]  = useState({});
+  const [removeConfirm, setRemoveConfirm] = useState(null);
+  const [removed,   setRemoved]   = useState(() => {
+    try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); }
+    catch { return []; }
+  });
+
+  const visible = allResources.filter(r => !removed.includes(r.id));
+
+  function startEdit(r) {
+    const effective = { ...r, ...(overrides[r.id] || {}) };
+    setEditForm({ name: effective.name, url: effective.url, phone: effective.phone || "", description: effective.description, qualifies: effective.qualifies });
+    setEditing(r.id);
+  }
+
+  function saveEdit() {
+    const updated = { ...overrides, [editing]: { ...editForm } };
+    localStorage.setItem(OVERRIDES_KEY, JSON.stringify(updated));
+    setOverrides(updated);
+    setEditing(null);
+  }
+
+  function doRemove(id) {
+    const updated = [...removed, id];
+    localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
+    setRemoved(updated);
+    setRemoveConfirm(null);
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+        <p style={{ fontSize: "14px", color: "var(--mid-gray)" }}>
+          {visible.length} resources in database
+        </p>
+      </div>
+
+      {visible.map(r => {
+        const effective = { ...r, ...(overrides[r.id] || {}) };
+        const typeInfo = TYPE_LABELS[effective.type] || { label: effective.type };
+        return (
+          <div key={r.id} style={{
+            border: "1.5px solid #e8e8e4", borderRadius: "10px",
+            padding: "14px 18px", marginBottom: "8px", background: "white",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ flex: 1, minWidth: "200px" }}>
+                <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--navy)", marginBottom: "3px" }}>{effective.name}</div>
+                <div style={{ fontSize: "12px", color: "var(--mid-gray)", marginBottom: "2px" }}>
+                  {typeInfo.label} · {effective.states.length === 0 ? "National" : effective.states.join(", ")}
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--teal)", wordBreak: "break-all" }}>{effective.url}</div>
+              </div>
+              <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+                <button onClick={() => startEdit(r)} style={{
+                  background: "var(--teal-pale)", color: "var(--teal)", border: "none",
+                  borderRadius: "8px", padding: "7px 14px",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                }}>Edit</button>
+                <button onClick={() => setRemoveConfirm(r.id)} style={{
+                  background: "#fde8e8", color: "#cc3333", border: "none",
+                  borderRadius: "8px", padding: "7px 14px",
+                  fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
+                }}>Remove</button>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Edit modal */}
+      {editing && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "28px", maxWidth: "520px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+            <h3 style={{ fontFamily: "'Lora', serif", fontSize: "18px", color: "var(--navy)", marginBottom: "20px" }}>Edit Resource</h3>
+
+            {[
+              { label: "Name", field: "name" },
+              { label: "Website URL", field: "url" },
+              { label: "Phone", field: "phone" },
+            ].map(({ label, field }) => (
+              <div className="field-group" key={field}>
+                <div className="field-label">{label}</div>
+                <input type="text" value={editForm[field] || ""} onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))} />
+              </div>
+            ))}
+
+            <div className="field-group">
+              <div className="field-label">Description</div>
+              <textarea value={editForm.description || ""} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} style={{ minHeight: "80px" }} />
+            </div>
+
+            <div className="field-group">
+              <div className="field-label">Who Qualifies</div>
+              <textarea value={editForm.qualifies || ""} onChange={e => setEditForm(f => ({ ...f, qualifies: e.target.value }))} style={{ minHeight: "60px" }} />
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", marginTop: "8px" }}>
+              <button onClick={() => setEditing(null)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <button onClick={saveEdit} className="btn-primary" style={{ flex: 1 }}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remove confirmation */}
+      {removeConfirm && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", textAlign: "center" }}>
+            <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚠️</div>
+            <h3 style={{ fontFamily: "'Lora', serif", fontSize: "18px", color: "var(--navy)", marginBottom: "10px" }}>Remove this resource?</h3>
+            <p style={{ fontSize: "14px", color: "#5a5a55", marginBottom: "20px" }}>This will immediately remove it for all users.</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setRemoveConfirm(null)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <button onClick={() => doRemove(removeConfirm)} style={{
+                flex: 1, background: "#cc3333", color: "white", border: "none",
+                borderRadius: "10px", padding: "12px",
+                fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 600, cursor: "pointer",
+              }}>Yes, Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const [tab, setTab] = useState("submissions");
   const [suggestions, setSuggestions] = useState([]);
@@ -321,46 +459,7 @@ export default function AdminPage() {
 
       {/* ── TAB 4: Manage ── */}
       {tab === "manage" && (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <p style={{ fontSize: "14px", color: "var(--mid-gray)" }}>
-              {allResources.length} resources in database
-            </p>
-            <button className="btn-primary" style={{ width: "auto", padding: "10px 20px", fontSize: "14px" }}>
-              + Add New Resource
-            </button>
-          </div>
-          {allResources.map(r => {
-            const typeInfo = TYPE_LABELS[r.type] || { label: r.type };
-            return (
-              <div key={r.id} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                flexWrap: "wrap", gap: "10px",
-                border: "1.5px solid #e8e8e4", borderRadius: "10px",
-                padding: "14px 18px", marginBottom: "8px", background: "white",
-              }}>
-                <div style={{ flex: 1, minWidth: "200px" }}>
-                  <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--navy)", marginBottom: "3px" }}>{r.name}</div>
-                  <div style={{ fontSize: "12px", color: "var(--mid-gray)" }}>
-                    {typeInfo.label} · {r.states.length === 0 ? "National" : r.states.join(", ")}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <button style={{
-                    background: "var(--teal-pale)", color: "var(--teal)", border: "none",
-                    borderRadius: "8px", padding: "7px 14px",
-                    fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                  }}>Edit</button>
-                  <button style={{
-                    background: "#fde8e8", color: "#cc3333", border: "none",
-                    borderRadius: "8px", padding: "7px 14px",
-                    fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-                  }}>Remove</button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ManageTab />
       )}
 
       {/* Decline confirm modal */}
