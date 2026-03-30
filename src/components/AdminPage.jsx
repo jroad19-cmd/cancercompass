@@ -157,9 +157,27 @@ export default function AdminPage() {
       {/* ── TAB 2: Feedback ── */}
       {tab === "feedback" && (
         <div>
-          <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "16px" }}>
-            All feedback submitted by users — errors, suggestions, feature requests, and other messages.
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+            <p style={{ fontSize: "14px", color: "var(--mid-gray)" }}>
+              All feedback submitted by users — errors, suggestions, feature requests, and other messages.
+            </p>
+            {feedback.length > 0 && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("cancercompass_feedback");
+                  setFeedback([]);
+                }}
+                style={{
+                  background: "var(--soft-gray)", border: "none", borderRadius: "8px",
+                  padding: "8px 16px", fontFamily: "'DM Sans', sans-serif",
+                  fontSize: "13px", fontWeight: 600, cursor: "pointer", color: "var(--mid-gray)",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                ✓ Clear All Reviewed
+              </button>
+            )}
+          </div>
           {feedback.length === 0 ? (
             <div style={{ textAlign: "center", padding: "48px 24px", color: "var(--mid-gray)" }}>
               <div style={{ fontSize: "40px", marginBottom: "12px" }}>💬</div>
@@ -187,9 +205,24 @@ export default function AdminPage() {
                     }}>
                       {style.label}
                     </span>
-                    <span style={{ fontSize: "12px", color: "var(--mid-gray)" }}>
-                      {formatDate(f.submittedAt)}
-                    </span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "12px", color: "var(--mid-gray)" }}>
+                        {formatDate(f.submittedAt)}
+                      </span>
+                      <button
+                        onClick={() => {
+                          const updated = feedback.filter(item => item.id !== f.id);
+                          localStorage.setItem("cancercompass_feedback", JSON.stringify(updated));
+                          setFeedback(updated);
+                        }}
+                        style={{
+                          background: "none", border: "none", color: "var(--mid-gray)",
+                          fontSize: "13px", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+                        }}
+                      >
+                        ✕ Dismiss
+                      </button>
+                    </div>
                   </div>
                   {f.resourceName && (
                     <div style={{ fontSize: "13px", color: "var(--navy)", fontWeight: 600, marginBottom: "6px" }}>
