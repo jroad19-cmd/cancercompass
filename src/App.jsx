@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./App.css";
+import { Analytics } from "@vercel/analytics/react";
 import Onboarding from "./components/Onboarding";
 import LookupForm from "./components/LookupForm";
 import ResultsPage from "./components/ResultsPage";
@@ -296,6 +297,7 @@ export default function App() {
       )}
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+      <Analytics />
     </>
   );
 }
