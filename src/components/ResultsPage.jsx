@@ -74,6 +74,16 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
   const { national, stateSpecific, cancerSpecific, total } =
     getFilteredResources(profile.cancerType, profile.state, typeFilter);
 
+  // Apply admin overrides and removals
+  const removed = JSON.parse(localStorage.getItem("cancercompass_removed") || "[]");
+  const overrides = JSON.parse(localStorage.getItem("cancercompass_resource_overrides") || "{}");
+  const applyOverrides = (arr) => arr
+    .filter(r => !removed.includes(r.id))
+    .map(r => ({ ...r, ...(overrides[r.id] || {}) }));
+  national = applyOverrides(national);
+  stateSpecific = applyOverrides(stateSpecific);
+  cancerSpecific = applyOverrides(cancerSpecific);
+
   return (
     <div style={{ paddingBottom: "40px" }}>
       {/* Hero */}
