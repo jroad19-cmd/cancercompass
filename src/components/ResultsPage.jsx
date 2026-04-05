@@ -71,7 +71,7 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
     setSavedCount(loadSaved().length);
   }, []);
 
-  const { national, stateSpecific, cancerSpecific, total } =
+  const { national: rawNational, stateSpecific: rawState, cancerSpecific: rawCancer, total } =
     getFilteredResources(profile.cancerType, profile.state, typeFilter);
 
   // Apply admin overrides and removals
@@ -80,9 +80,9 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
   const applyOverrides = (arr) => arr
     .filter(r => !removed.includes(r.id))
     .map(r => ({ ...r, ...(overrides[r.id] || {}) }));
-  national = applyOverrides(national);
-  stateSpecific = applyOverrides(stateSpecific);
-  cancerSpecific = applyOverrides(cancerSpecific);
+  const national = applyOverrides(rawNational);
+  const stateSpecific = applyOverrides(rawState);
+  const cancerSpecific = applyOverrides(rawCancer);
 
   return (
     <div style={{ paddingBottom: "40px" }}>
