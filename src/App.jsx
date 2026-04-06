@@ -204,6 +204,10 @@ export default function App() {
 
   useEffect(() => {
     setHeaderProfile(getActiveProfile());
+    // Track page views in Vercel Analytics
+    if (window.va) {
+      window.va('pageview', { path: '/' + screen });
+    }
   }, [screen]);
 
   function handleOnboardDone() {
