@@ -94,7 +94,7 @@ export default function FeedbackForm({ onClose }) {
             </div>
 
             <p style={{ fontSize: "14px", color: "#5a5a55", marginBottom: "22px", lineHeight: 1.5 }}>
-              Found an error? Have a suggestion? Want to recommend a resource? We'd love to hear from you.
+              Found something helpful? Found an error? Have a suggestion? We'd love to hear from you.
             </p>
 
             <div className="field-group">
@@ -103,6 +103,7 @@ export default function FeedbackForm({ onClose }) {
               </div>
               <select value={form.type} onChange={e => set("type", e.target.value)}>
                 <option value="">Select type...</option>
+                <option value="useful">❤️ I Found This Useful</option>
                 <option value="error">🔴 Report an Error</option>
                 <option value="resource">➕ Suggest a Resource</option>
                 <option value="improvement">💡 Suggest an Improvement</option>
@@ -148,6 +149,7 @@ export default function FeedbackForm({ onClose }) {
                 value={form.description}
                 onChange={e => set("description", e.target.value)}
                 placeholder={
+                  form.type === "useful"      ? "Were you able to find a grant, financial help, support, or something else?" :
                   form.type === "error"       ? "What's wrong? (e.g. broken link, wrong phone number, outdated info)" :
                   form.type === "resource"    ? "Tell us about this resource — website, who it helps, type of support..." :
                   form.type === "improvement" ? "What would make CancerCompass more helpful?" :
