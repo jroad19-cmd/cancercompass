@@ -113,7 +113,7 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
         gap: "8px",
       }}>
         <span style={{ flexShrink: 0 }}>⚠️</span>
-        <span>CancerCompass is a free public resource created by an individual volunteer who lost his wife of 47 years to cancer. This is not medical advice. Always contact organizations directly to confirm availability and eligibility. We do not endorse any listed organization.</span>
+        <span>We work hard to keep this tool as helpful and up to date as possible. New programs, grants, and resources are added regularly, and existing information is reviewed and updated often. We encourage you to check back from time to time, as new help may become available. However, things can change — links may stop working or new help may appear. If you notice a broken link, outdated information, or know of a resource that could help other cancer patients, please use the "Send Feedback" button to let us know. Your feedback helps us improve this tool and support more people.</span>
       </div>
 
       {/* Filter bar */}
