@@ -153,6 +153,9 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
           </div>
         ) : (
           <>
+            <p style={{ textAlign: "center", fontSize: "13px", color: "var(--mid-gray)", margin: "0 0 16px" }}>
+              Tap any section below to see matching programs.
+            </p>
             {national.length > 0 && (
               <Section emoji="🏛️" title="National Programs" resources={national} onSaveChange={handleSaveChange} />
             )}
