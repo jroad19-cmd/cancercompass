@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin-cc-jroad19-2026
+
+Sitemap: https://cancerhelpfinder.org/sitemap.xml

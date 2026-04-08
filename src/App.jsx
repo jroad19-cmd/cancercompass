@@ -5,10 +5,12 @@ import LookupForm from "./components/LookupForm";
 import ResultsPage from "./components/ResultsPage";
 import AdminPage from "./components/AdminPage";
 import SavedResourcesPage from "./components/SavedResourcesPage";
+import AboutPage from "./components/AboutPage";
 import { getActiveProfile, profileLabel } from "./components/ProfileManager";
 
 const ONBOARD_KEY  = "cancercompass_onboarded";
 const ADMIN_PATH   = "/admin-cc-jroad19-2026";
+const ABOUT_PATH   = "/about";
 const ADMIN_PASS   = "2022Frontier";
 const ADMIN_UNLOCK = "cancercompass_admin_unlocked";
 
@@ -197,7 +199,9 @@ export default function App() {
   const isAdmin = window.location.pathname === ADMIN_PATH;
 
   const [onboarded,     setOnboarded]     = useState(() => !!localStorage.getItem(ONBOARD_KEY));
-  const [screen,        setScreen]        = useState("lookup");
+  const [screen,        setScreen]        = useState(() =>
+    window.location.pathname === ABOUT_PATH ? "about" : "lookup"
+  );
   const [profile,       setProfile]       = useState(null);
   const [headerProfile, setHeaderProfile] = useState(getActiveProfile());
   const [showAbout,     setShowAbout]     = useState(false);
@@ -223,6 +227,19 @@ export default function App() {
 
   function handleBack() {
     setScreen("lookup");
+    window.history.pushState({}, "", "/");
+    window.scrollTo(0, 0);
+  }
+
+  function handleAbout() {
+    setScreen("about");
+    window.history.pushState({}, "", "/about");
+    window.scrollTo(0, 0);
+  }
+
+  function handleBackFromAbout() {
+    setScreen("lookup");
+    window.history.pushState({}, "", "/");
     window.scrollTo(0, 0);
   }
 
@@ -256,7 +273,7 @@ export default function App() {
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <button
-            onClick={() => setShowAbout(true)}
+            onClick={handleAbout}
             title="About CancerCompass"
             style={{
               background: "var(--teal-pale)", border: "1.5px solid var(--teal)",
@@ -283,20 +300,27 @@ export default function App() {
       </header>
 
       {screen === "lookup" && (
-        <LookupForm onResults={handleResults} onAbout={() => setShowAbout(true)} />
+        <LookupForm onResults={handleResults} onAbout={handleAbout} />
       )}
 
       {screen === "results" && profile && (
         <ResultsPage
           profile={profile}
           onBack={handleBack}
-          onAbout={() => setShowAbout(true)}
+          onAbout={handleAbout}
           onViewSaved={handleViewSaved}
         />
       )}
 
       {screen === "saved" && (
         <SavedResourcesPage onBack={handleBackToResults} />
+      )}
+
+      {screen === "about" && (
+        <AboutPage
+          onBack={handleBackFromAbout}
+          onShowOnboarding={() => setShowAbout(true)}
+        />
       )}
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}

@@ -226,7 +226,7 @@ function ManageTab() {
         borderRadius: "10px", padding: "12px 16px", marginBottom: "16px",
         fontSize: "13px", color: "#7a5a20",
       }}>
-        💡 <strong>Reminder:</strong> Edits made here are temporary and only visible to you. Click <strong>Export Fixes</strong> and paste the result to Claude to make them permanent for all users.
+        💡 <strong>Reminder:</strong> Edits made here are temporary and visible only to you. To make changes permanent: open the Node.js command prompt, type <strong>cd C:\Users\jroad\OneDrive\Desktop\Github\cancercompass</strong> and press Enter, then type <strong>claude</strong> and press Enter. Then describe your changes and Claude Code will update the files directly.
       </div>
 
       {exportMsg && (

@@ -71,6 +71,56 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
     setSavedCount(loadSaved().length);
   }, []);
 
+  function handlePrint() {
+    const sections = [
+      { title: "National Programs", items: national },
+      { title: `${profile.state} Programs`, items: stateSpecific },
+      { title: `${profile.cancerType} Programs`, items: cancerSpecific },
+    ].filter(s => s.items.length > 0);
+
+    const renderSection = (s) => `
+      <h2>${s.title}</h2>
+      ${s.items.map(r => `
+        <div class="resource">
+          <div class="name">${r.name}</div>
+          ${r.phone ? `<div class="meta">📞 ${r.phone}</div>` : ""}
+          <div class="meta"><a href="${r.url}">${r.url}</a></div>
+          <div class="desc">${r.description}</div>
+          ${r.qualifies ? `<div class="qualifies">Who qualifies: ${r.qualifies}</div>` : ""}
+        </div>`).join("")}`;
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+<title>CancerCompass — My Results</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; color: #222; margin: 24px; }
+  h1 { font-size: 18px; color: #1a3a5c; margin-bottom: 2px; }
+  .subtitle { font-size: 11px; color: #666; margin-bottom: 24px; }
+  h2 { font-size: 14px; color: #1a3a5c; border-bottom: 1.5px solid #1a3a5c; padding-bottom: 4px; margin-top: 24px; margin-bottom: 12px; }
+  .resource { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #eee; page-break-inside: avoid; }
+  .name { font-weight: bold; font-size: 13px; margin-bottom: 3px; }
+  .meta { font-size: 11px; color: #555; margin-bottom: 2px; }
+  .meta a { color: #0077cc; text-decoration: none; }
+  .desc { font-size: 11px; color: #444; line-height: 1.5; margin-top: 4px; }
+  .qualifies { font-size: 11px; color: #666; font-style: italic; margin-top: 3px; }
+  @media print { body { margin: 10px; } }
+</style>
+</head>
+<body>
+<h1>🎗️ CancerCompass — My Results</h1>
+<div class="subtitle">${profile.cancerType} · ${profile.state} · cancerhelpfinder.org · Printed ${new Date().toLocaleDateString()}</div>
+${sections.map(renderSection).join("")}
+</body>
+</html>`;
+
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 400);
+  }
+
   const { national: rawNational, stateSpecific: rawState, cancerSpecific: rawCancer, total } =
     getFilteredResources(profile.cancerType, profile.state, typeFilter);
 
@@ -165,6 +215,20 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
             {cancerSpecific.length > 0 && (
               <Section emoji="💊" title={`${profile.cancerType} Programs`} resources={cancerSpecific} onSaveChange={handleSaveChange} />
             )}
+            {stateSpecific.length === 0 && cancerSpecific.length === 0 && (
+              <div style={{
+                background: "white", borderRadius: "16px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+                padding: "28px 24px", textAlign: "center",
+              }}>
+                <p style={{ fontSize: "15px", color: "var(--navy)", fontWeight: 600, marginBottom: "8px" }}>
+                  We didn't find programs specific to your selection
+                </p>
+                <p style={{ fontSize: "14px", color: "#5a5a55", lineHeight: 1.6, margin: 0 }}>
+                  The National Programs above may still be able to help — many of them work with any cancer type and any state. Try the <strong>Filter</strong> to explore all types of assistance, or use <strong>Send Feedback</strong> to let us know what you were looking for.
+                </p>
+              </div>
+            )}
           </>
         )}
 
@@ -177,6 +241,11 @@ export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
             <button className="btn-outline" onClick={() => setShowFeedback(true)}>
               💬 Send Feedback
             </button>
+            {total > 0 && (
+              <button className="btn-outline" onClick={handlePrint}>
+                🖨️ Print My Results
+              </button>
+            )}
             {savedCount > 0 && (
               <button
                 onClick={onViewSaved}
