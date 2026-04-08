@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { resources as allResources, TYPE_LABELS } from "../data/resources";
 
 const REVIEWED_KEY  = "cancercompass_reviewed_dates";
@@ -51,8 +51,16 @@ function AddResourceSection() {
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(null);
   const [saved, setSaved]     = useState(null); // confirmation object
+  const previewRef            = useRef(null);
 
   const VALID_TYPES = ["financial","medication","transportation","housing","nutrition","mental","legal","veterans","pediatric"];
+
+  // Scroll preview into view whenever it appears
+  useEffect(() => {
+    if (preview && previewRef.current) {
+      previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [preview]);
 
   async function handleExtract() {
     if (!url.trim()) return;
@@ -177,8 +185,8 @@ function AddResourceSection() {
         Paste a URL from any cancer support organization. Claude will visit the page and auto-fill the details for your review.
       </p>
 
-      {/* URL input row */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+      {/* URL input row — hidden while preview is open */}
+      <div style={{ display: preview ? "none" : "flex", gap: "8px", marginBottom: "10px" }}>
         <input
           type="url"
           value={url}
@@ -229,7 +237,7 @@ function AddResourceSection() {
 
       {/* Editable preview card */}
       {preview && (
-        <div style={{
+        <div ref={previewRef} style={{
           background: "var(--soft-gray)", border: "1.5px solid var(--teal)",
           borderRadius: "10px", padding: "16px", marginTop: "10px",
         }}>
@@ -316,7 +324,7 @@ function AddResourceSection() {
           </div>
 
           <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
-            <button onClick={() => setPreview(null)} style={{
+            <button onClick={() => { setPreview(null); setUrl(""); }} style={{
               background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
               padding: "9px 16px", fontFamily: "'DM Sans', sans-serif",
               fontSize: "13px", color: "var(--mid-gray)", cursor: "pointer",
