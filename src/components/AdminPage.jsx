@@ -1,8 +1,385 @@
 import { useState } from "react";
-import { resources as allResources, TYPE_LABELS } from "../data/resources";
+import { resources as allResources, TYPE_LABELS, CANCER_TYPES, US_STATES } from "../data/resources";
 
 const REVIEWED_KEY  = "cancercompass_reviewed_dates";
 const OVERRIDES_KEY = "cancercompass_resource_overrides";
+
+const CANCER_PREFIX_MAP = {
+  "Breast Cancer": "bc",
+  "Lung Cancer (Non-Small Cell)": "lc", "Lung Cancer (Small Cell)": "lc",
+  "Colon / Colorectal Cancer": "cc",
+  "Prostate Cancer": "pc",
+  "Leukemia (ALL)": "ll", "Leukemia (AML)": "ll", "Leukemia (CLL)": "ll", "Leukemia (CML)": "ll",
+  "Lymphoma (Hodgkin's)": "ll", "Lymphoma (Non-Hodgkin's)": "ll",
+  "Multiple Myeloma": "ll", "Blood Cancer (General)": "ll",
+  "Pancreatic Cancer": "panc",
+  "Ovarian Cancer": "oc",
+  "Brain / CNS Cancer": "brain",
+  "Melanoma / Skin Cancer": "mel",
+  "Sarcoma": "sar",
+  "Thyroid Cancer": "thy",
+  "Mesothelioma": "meso",
+  "Bladder Cancer": "blad",
+  "Head & Neck Cancer": "hn",
+  "Kidney (Renal) Cancer": "kid",
+  "Liver Cancer": "liv",
+  "Stomach / Gastric Cancer": "stom",
+  "Esophageal Cancer": "eso",
+  "Testicular Cancer": "test",
+  "Uterine / Endometrial Cancer": "uter",
+  "Cervical Cancer": "cer",
+  "Other / Rare Cancer (Not Listed)": "rare",
+};
+
+function generateNextId(cancerTypes = [], states = []) {
+  let prefix = "n";
+  if (cancerTypes.length === 1 && CANCER_PREFIX_MAP[cancerTypes[0]]) {
+    prefix = CANCER_PREFIX_MAP[cancerTypes[0]];
+  }
+  const pattern = new RegExp("^" + prefix + "(\\d+)$");
+  const nums = allResources
+    .map(r => { const m = r.id.match(pattern); return m ? parseInt(m[1]) : 0; })
+    .filter(n => n > 0);
+  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  return prefix + String(next).padStart(3, "0");
+}
+
+// ── ADD RESOURCE SECTION ─────────────────────────────────────────────────────
+function AddResourceSection() {
+  const [url, setUrl]         = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [preview, setPreview] = useState(null);
+  const [saved, setSaved]     = useState(null); // confirmation object
+
+  const VALID_TYPES = ["financial","medication","transportation","housing","nutrition","mental","legal","veterans","pediatric"];
+
+  async function handleExtract() {
+    if (!url.trim()) return;
+    setLoading(true); setError(""); setPreview(null); setSaved(null);
+    try {
+      const res = await fetch("/api/extract-resource", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) { setError(json.error || "Extraction failed."); return; }
+      const d = json.data;
+      const cancerArr = Array.isArray(d.cancerTypes) ? d.cancerTypes : [];
+      const statesArr = Array.isArray(d.states) ? d.states : [];
+      setPreview({
+        id:           generateNextId(cancerArr, statesArr),
+        name:         d.name || "",
+        description:  d.description || "",
+        qualifies:    d.qualifies || "",
+        type:         VALID_TYPES.includes(d.type) ? d.type : "financial",
+        phone:        d.phone || "",
+        url:          url.trim(),
+        statesText:   statesArr.join(", "),
+        cancerText:   cancerArr.join(", "),
+      });
+    } catch (e) {
+      setError("Network error — make sure ANTHROPIC_API_KEY is set in Vercel environment variables.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleManual() {
+    setSaved(null); setError("");
+    const cancerArr = [];
+    const statesArr = [];
+    setPreview({
+      id: generateNextId(cancerArr, statesArr),
+      name: "", description: "", qualifies: "",
+      type: "financial", phone: "", url: url.trim(),
+      statesText: "", cancerText: "",
+    });
+  }
+
+  function updatePreview(field, value) {
+    setPreview(p => {
+      const updated = { ...p, [field]: value };
+      // Regenerate ID if cancer types change
+      if (field === "cancerText") {
+        const arr = value.split(",").map(s => s.trim()).filter(Boolean);
+        updated.id = generateNextId(arr, updated.statesText.split(",").map(s => s.trim()).filter(Boolean));
+      }
+      return updated;
+    });
+  }
+
+  function handleSavePermanently() {
+    const today = new Date().toISOString().split("T")[0];
+    const cancerArr = preview.cancerText.split(",").map(s => s.trim()).filter(Boolean);
+    const statesArr = preview.statesText.split(",").map(s => s.trim()).filter(Boolean);
+    const phoneVal  = preview.phone ? `"${preview.phone}"` : "null";
+
+    const newEntry = `  { id:"${preview.id}", name:"${preview.name}", description:"${preview.description}", type:"${preview.type}", cancerTypes:${JSON.stringify(cancerArr)}, states:${JSON.stringify(statesArr)}, qualifies:"${preview.qualifies}", phone:${phoneVal}, url:"${preview.url}", lastReviewed:"${today}" },`;
+
+    // Gather pending overrides + removals
+    const overrides = (() => { try { return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); } catch { return {}; } })();
+    const removed   = (() => { try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; } })();
+
+    const overrideLines = Object.entries(overrides).map(([id, changes]) => {
+      const r = allResources.find(x => x.id === id);
+      return `  • ${r ? r.name : id}: ${Object.entries(changes).map(([k, v]) => `${k} → "${v}"`).join(", ")}`;
+    });
+    const removedLines = removed.map(id => {
+      const r = allResources.find(x => x.id === id);
+      return `  • Remove ${r ? r.name : id}`;
+    });
+
+    let clip = `=== NEW RESOURCE (add to src/data/resources.js) ===\n${newEntry}\n`;
+    if (overrideLines.length > 0) clip += `\n=== PENDING EDITS ===\n${overrideLines.join("\n")}\n\nOverrides JSON:\n${JSON.stringify(overrides, null, 2)}\n`;
+    if (removedLines.length > 0) clip += `\n=== PENDING REMOVALS ===\n${removedLines.join("\n")}\n`;
+
+    navigator.clipboard.writeText(clip).then(() => {
+      setSaved({
+        id:        preview.id,
+        name:      preview.name,
+        entry:     newEntry,
+        overrides: overrideLines,
+        removed:   removedLines,
+        copied:    true,
+      });
+      setPreview(null);
+      setUrl("");
+    }).catch(() => {
+      setSaved({
+        id:        preview.id,
+        name:      preview.name,
+        entry:     newEntry,
+        overrides: overrideLines,
+        removed:   removedLines,
+        copied:    false,
+      });
+    });
+  }
+
+  const inputStyle = {
+    width: "100%", padding: "9px 12px", border: "1.5px solid #e0e0db",
+    borderRadius: "8px", fontSize: "13px", fontFamily: "'DM Sans', sans-serif",
+    boxSizing: "border-box", outline: "none",
+  };
+  const labelStyle = { fontSize: "12px", fontWeight: 600, color: "var(--mid-gray)", marginBottom: "4px", display: "block" };
+
+  return (
+    <div style={{
+      background: "white", border: "1.5px solid #e8e8e4",
+      borderRadius: "12px", padding: "20px", marginBottom: "20px",
+    }}>
+      <h3 style={{ fontFamily: "'Lora', serif", fontSize: "17px", color: "var(--navy)", margin: "0 0 6px" }}>
+        ➕ Add New Resource
+      </h3>
+      <p style={{ fontSize: "13px", color: "var(--mid-gray)", margin: "0 0 14px" }}>
+        Paste a URL from any cancer support organization. Claude will visit the page and auto-fill the details for your review.
+      </p>
+
+      {/* URL input row */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+        <input
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleExtract()}
+          placeholder="https://example.org/apply"
+          style={{ ...inputStyle, flex: 1 }}
+        />
+        <button
+          onClick={handleExtract}
+          disabled={loading || !url.trim()}
+          style={{
+            background: loading || !url.trim() ? "#ccc" : "var(--teal)", color: "white",
+            border: "none", borderRadius: "8px", padding: "9px 18px",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: loading || !url.trim() ? "not-allowed" : "pointer", whiteSpace: "nowrap",
+          }}
+        >
+          {loading ? "Extracting…" : "Add Resource"}
+        </button>
+        {!preview && !loading && (
+          <button onClick={handleManual} style={{
+            background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
+            padding: "9px 14px", fontFamily: "'DM Sans', sans-serif",
+            fontSize: "13px", color: "var(--mid-gray)", cursor: "pointer", whiteSpace: "nowrap",
+          }}>
+            Fill manually
+          </button>
+        )}
+      </div>
+
+      {/* Loading */}
+      {loading && (
+        <div style={{ fontSize: "13px", color: "var(--teal)", marginBottom: "10px" }}>
+          🔍 Claude is reading the page and extracting resource details…
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div style={{
+          background: "#fde8e8", border: "1px solid #f5c0c0", borderRadius: "8px",
+          padding: "10px 14px", fontSize: "13px", color: "#cc3333", marginBottom: "10px",
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* Editable preview card */}
+      {preview && (
+        <div style={{
+          background: "var(--soft-gray)", border: "1.5px solid var(--teal)",
+          borderRadius: "10px", padding: "16px", marginTop: "10px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+            <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--navy)" }}>
+              Review & edit before saving
+            </span>
+            <span style={{
+              background: "var(--teal-pale)", color: "var(--teal)",
+              borderRadius: "8px", padding: "3px 10px", fontSize: "12px", fontWeight: 700,
+            }}>
+              ID: {preview.id}
+            </span>
+          </div>
+
+          <div style={{ display: "grid", gap: "10px" }}>
+            <div>
+              <label style={labelStyle}>Name</label>
+              <input style={inputStyle} value={preview.name} onChange={e => updatePreview("name", e.target.value)} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div>
+                <label style={labelStyle}>Type</label>
+                <select
+                  value={preview.type}
+                  onChange={e => updatePreview("type", e.target.value)}
+                  style={{ ...inputStyle }}
+                >
+                  {["financial","medication","transportation","housing","nutrition","mental","legal","veterans","pediatric"].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Phone (optional)</label>
+                <input style={inputStyle} value={preview.phone} onChange={e => updatePreview("phone", e.target.value)} placeholder="1-800-XXX-XXXX or leave blank" />
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>Description</label>
+              <textarea
+                value={preview.description}
+                onChange={e => updatePreview("description", e.target.value)}
+                style={{ ...inputStyle, minHeight: "70px", resize: "vertical" }}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Who Qualifies</label>
+              <textarea
+                value={preview.qualifies}
+                onChange={e => updatePreview("qualifies", e.target.value)}
+                style={{ ...inputStyle, minHeight: "50px", resize: "vertical" }}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>URL</label>
+              <input style={inputStyle} value={preview.url} onChange={e => updatePreview("url", e.target.value)} />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+              <div>
+                <label style={labelStyle}>Cancer Types (comma-separated, or blank for all)</label>
+                <textarea
+                  value={preview.cancerText}
+                  onChange={e => updatePreview("cancerText", e.target.value)}
+                  style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }}
+                  placeholder="Breast Cancer, Ovarian Cancer…"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>States (comma-separated, or blank for national)</label>
+                <textarea
+                  value={preview.statesText}
+                  onChange={e => updatePreview("statesText", e.target.value)}
+                  style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }}
+                  placeholder="Texas, California…"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+            <button onClick={() => setPreview(null)} style={{
+              background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
+              padding: "9px 16px", fontFamily: "'DM Sans', sans-serif",
+              fontSize: "13px", color: "var(--mid-gray)", cursor: "pointer",
+            }}>
+              Cancel
+            </button>
+            <button
+              onClick={handleSavePermanently}
+              disabled={!preview.name || !preview.description}
+              style={{
+                background: (!preview.name || !preview.description) ? "#ccc" : "var(--navy)",
+                color: "white", border: "none", borderRadius: "8px", padding: "9px 20px",
+                fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+                cursor: (!preview.name || !preview.description) ? "not-allowed" : "pointer", flex: 1,
+              }}
+            >
+              💾 Save Permanently
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation */}
+      {saved && (
+        <div style={{
+          background: "#e8fdf0", border: "1.5px solid #27ae60",
+          borderRadius: "10px", padding: "16px", marginTop: "12px",
+        }}>
+          <div style={{ fontWeight: 600, color: "#27ae60", marginBottom: "8px", fontSize: "14px" }}>
+            {saved.copied ? "✅ Copied to clipboard!" : "✅ Generated — copy the entry below"}
+          </div>
+          <p style={{ fontSize: "13px", color: "#1a6633", margin: "0 0 10px" }}>
+            <strong>Added:</strong> {saved.name} <span style={{ opacity: 0.7 }}>({saved.id})</span>
+            {saved.overrides.length > 0 && (
+              <><br /><strong>Pending edits also included:</strong><br />{saved.overrides.map((l, i) => <span key={i}>{l}<br /></span>)}</>
+            )}
+            {saved.removed.length > 0 && (
+              <><br /><strong>Pending removals also included:</strong><br />{saved.removed.map((l, i) => <span key={i}>{l}<br /></span>)}</>
+            )}
+          </p>
+          <div style={{
+            background: "#f0fff6", border: "1px solid #b0e0c0", borderRadius: "6px",
+            padding: "10px 12px", fontFamily: "monospace", fontSize: "11px",
+            color: "#1a3a1a", whiteSpace: "pre-wrap", wordBreak: "break-all",
+            marginBottom: "10px", maxHeight: "120px", overflowY: "auto",
+          }}>
+            {saved.entry}
+          </div>
+          <p style={{ fontSize: "12px", color: "#27ae60", margin: 0 }}>
+            Open Claude Code, paste the clipboard contents, and Claude will update <code>src/data/resources.js</code> permanently.
+          </p>
+          <button onClick={() => setSaved(null)} style={{
+            marginTop: "10px", background: "none", border: "1px solid #27ae60",
+            borderRadius: "6px", padding: "5px 14px", fontSize: "12px",
+            color: "#27ae60", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          }}>
+            Dismiss
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function loadReviewedDates() {
   try { return JSON.parse(localStorage.getItem(REVIEWED_KEY) || "{}"); }
@@ -203,6 +580,8 @@ function ManageTab() {
 
   return (
     <div>
+      <AddResourceSection />
+
       {/* Top bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
         <p style={{ fontSize: "14px", color: "var(--mid-gray)", margin: 0, flex: 1 }}>
