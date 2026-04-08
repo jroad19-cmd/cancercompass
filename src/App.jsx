@@ -6,11 +6,13 @@ import ResultsPage from "./components/ResultsPage";
 import AdminPage from "./components/AdminPage";
 import SavedResourcesPage from "./components/SavedResourcesPage";
 import AboutPage from "./components/AboutPage";
+import TermsPage from "./components/TermsPage";
 import { getActiveProfile, profileLabel } from "./components/ProfileManager";
 
 const ONBOARD_KEY  = "cancercompass_onboarded";
 const ADMIN_PATH   = "/admin-cc-jroad19-2026";
 const ABOUT_PATH   = "/about";
+const TERMS_PATH   = "/terms";
 const ADMIN_PASS   = "2022Frontier";
 const ADMIN_UNLOCK = "cancercompass_admin_unlocked";
 
@@ -199,9 +201,12 @@ export default function App() {
   const isAdmin = window.location.pathname === ADMIN_PATH;
 
   const [onboarded,     setOnboarded]     = useState(() => !!localStorage.getItem(ONBOARD_KEY));
-  const [screen,        setScreen]        = useState(() =>
-    window.location.pathname === ABOUT_PATH ? "about" : "lookup"
-  );
+  const [screen,        setScreen]        = useState(() => {
+    const p = window.location.pathname;
+    if (p === ABOUT_PATH) return "about";
+    if (p === TERMS_PATH) return "terms";
+    return "lookup";
+  });
   const [profile,       setProfile]       = useState(null);
   const [headerProfile, setHeaderProfile] = useState(getActiveProfile());
   const [showAbout,     setShowAbout]     = useState(false);
@@ -238,6 +243,18 @@ export default function App() {
   }
 
   function handleBackFromAbout() {
+    setScreen("lookup");
+    window.history.pushState({}, "", "/");
+    window.scrollTo(0, 0);
+  }
+
+  function handleTerms() {
+    setScreen("terms");
+    window.history.pushState({}, "", "/terms");
+    window.scrollTo(0, 0);
+  }
+
+  function handleBackFromTerms() {
     setScreen("lookup");
     window.history.pushState({}, "", "/");
     window.scrollTo(0, 0);
@@ -300,7 +317,7 @@ export default function App() {
       </header>
 
       {screen === "lookup" && (
-        <LookupForm onResults={handleResults} onAbout={handleAbout} />
+        <LookupForm onResults={handleResults} onAbout={handleAbout} onTerms={handleTerms} />
       )}
 
       {screen === "results" && profile && (
@@ -308,12 +325,13 @@ export default function App() {
           profile={profile}
           onBack={handleBack}
           onAbout={handleAbout}
+          onTerms={handleTerms}
           onViewSaved={handleViewSaved}
         />
       )}
 
       {screen === "saved" && (
-        <SavedResourcesPage onBack={handleBackToResults} />
+        <SavedResourcesPage onBack={handleBackToResults} onTerms={handleTerms} />
       )}
 
       {screen === "about" && (
@@ -321,6 +339,10 @@ export default function App() {
           onBack={handleBackFromAbout}
           onShowOnboarding={() => setShowAbout(true)}
         />
+      )}
+
+      {screen === "terms" && (
+        <TermsPage onBack={handleBackFromTerms} />
       )}
 
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}

@@ -31,7 +31,7 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
-export default function SavedResourcesPage({ onBack }) {
+export default function SavedResourcesPage({ onBack, onTerms }) {
   const [saved, setSaved] = useState([]);
   const [removeConfirm, setRemoveConfirm] = useState(null);
 
@@ -182,6 +182,16 @@ export default function SavedResourcesPage({ onBack }) {
       <footer className="cc-footer">
         <strong>CancerCompass</strong><br />
         CancerCompass is a free public resource created and maintained by an individual volunteer who lost his wife of 47 years to cancer and would like to help as many cancer patients as possible. It is not a medical organization, licensed healthcare provider, or legal entity. The information provided is for general informational purposes only and does not constitute medical, legal, or financial advice. Always contact organizations directly to confirm availability and eligibility. We do not endorse, recommend, or have any affiliation with the organizations listed.
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center", flexWrap: "wrap" }}>
+          <button onClick={onTerms} style={{
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+            borderRadius: "8px", color: "white",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          }}>
+            📄 Terms of Use
+          </button>
+        </div>
       </footer>
     </div>
   );

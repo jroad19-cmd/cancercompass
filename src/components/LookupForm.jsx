@@ -9,7 +9,7 @@ import {
 } from "./ProfileManager";
 import FeedbackForm from "./FeedbackForm";
 
-export default function LookupForm({ onResults, onAbout }) {
+export default function LookupForm({ onResults, onAbout, onTerms }) {
   const [form, setForm] = useState({
     id: generateId(),
     firstName: "",
@@ -317,6 +317,14 @@ export default function LookupForm({ onResults, onAbout }) {
             cursor: "pointer", marginTop: "14px", padding: "8px 18px",
           }}>
             ℹ️ About CancerCompass
+          </button>
+          <button onClick={onTerms} style={{
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+            borderRadius: "8px", color: "white",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          }}>
+            📄 Terms of Use
           </button>
           <button onClick={() => setShowFeedback(true)} style={{
             background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",

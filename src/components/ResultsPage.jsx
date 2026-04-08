@@ -62,7 +62,7 @@ function Section({ emoji, title, resources, defaultOpen, onSaveChange }) {
   );
 }
 
-export default function ResultsPage({ profile, onBack, onAbout, onViewSaved }) {
+export default function ResultsPage({ profile, onBack, onAbout, onTerms, onViewSaved }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedCount, setSavedCount] = useState(() => loadSaved().length);
@@ -286,6 +286,14 @@ ${sections.map(renderSection).join("")}
             cursor: "pointer", marginTop: "14px", padding: "8px 18px",
           }}>
             ℹ️ About CancerCompass
+          </button>
+          <button onClick={onTerms} style={{
+            background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
+            borderRadius: "8px", color: "white",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: "pointer", marginTop: "14px", padding: "8px 18px",
+          }}>
+            📄 Terms of Use
           </button>
           <button onClick={() => setShowFeedback(true)} style={{
             background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.4)",
