@@ -551,8 +551,8 @@ function ManageTab() {
     });
 
   function startEdit(r) {
-    const effective = { ...r, ...(overrides[r.id] || {}) };
-    setEditForm({ name: effective.name, url: effective.url, phone: effective.phone || "", description: effective.description, qualifies: effective.qualifies });
+    // Always load from the live resources.js value — never from stale overrides
+    setEditForm({ name: r.name, url: r.url, phone: r.phone || "", description: r.description, qualifies: r.qualifies });
     setEditing(r.id);
   }
 
@@ -571,14 +571,30 @@ function ManageTab() {
   }
 
   function exportOverrides() {
-    const data = localStorage.getItem(OVERRIDES_KEY);
-    if (!data || data === "{}") {
+    let allOverrides = {};
+    try { allOverrides = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); } catch { /* ignore */ }
+
+    // Only export fields that genuinely differ from the current resources.js value
+    const pending = {};
+    for (const [id, changes] of Object.entries(allOverrides)) {
+      const base = allResources.find(r => r.id === id);
+      if (!base) continue;
+      const diff = {};
+      for (const [key, val] of Object.entries(changes)) {
+        const baseVal = base[key] == null ? "" : String(base[key]);
+        const overVal = val == null ? "" : String(val);
+        if (overVal !== baseVal) diff[key] = val;
+      }
+      if (Object.keys(diff).length > 0) pending[id] = diff;
+    }
+
+    if (Object.keys(pending).length === 0) {
       setExportMsg("No pending fixes to export.");
       setTimeout(() => setExportMsg(""), 3000);
       return;
     }
-    navigator.clipboard.writeText(data).then(() => {
-      setExportMsg("✅ Copied! Paste to Claude to make fixes permanent for all users.");
+    navigator.clipboard.writeText(JSON.stringify(pending, null, 2)).then(() => {
+      setExportMsg(`✅ Copied! ${Object.keys(pending).length} pending fix(es) — paste to Claude.`);
       setTimeout(() => setExportMsg(""), 5000);
     }).catch(() => {
       setExportMsg("❌ Copy failed — try again.");
