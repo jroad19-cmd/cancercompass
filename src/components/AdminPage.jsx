@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { resources as allResources, TYPE_LABELS, CANCER_TYPES, US_STATES } from "../data/resources";
+import { resources as allResources, TYPE_LABELS } from "../data/resources";
 
 const REVIEWED_KEY  = "cancercompass_reviewed_dates";
 const OVERRIDES_KEY = "cancercompass_resource_overrides";
@@ -31,7 +31,7 @@ const CANCER_PREFIX_MAP = {
   "Other / Rare Cancer (Not Listed)": "rare",
 };
 
-function generateNextId(cancerTypes = [], states = []) {
+function generateNextId(cancerTypes = []) {
   let prefix = "n";
   if (cancerTypes.length === 1 && CANCER_PREFIX_MAP[cancerTypes[0]]) {
     prefix = CANCER_PREFIX_MAP[cancerTypes[0]];
