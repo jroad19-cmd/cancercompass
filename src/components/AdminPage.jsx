@@ -31,13 +31,13 @@ const CANCER_PREFIX_MAP = {
   "Other / Rare Cancer (Not Listed)": "rare",
 };
 
-function generateNextId(cancerTypes = []) {
+function generateNextId(cancerTypes = [], extraResources = []) {
   let prefix = "n";
   if (cancerTypes.length === 1 && CANCER_PREFIX_MAP[cancerTypes[0]]) {
     prefix = CANCER_PREFIX_MAP[cancerTypes[0]];
   }
   const pattern = new RegExp("^" + prefix + "(\\d+)$");
-  const nums = allResources
+  const nums = [...allResources, ...extraResources]
     .map(r => { const m = r.id.match(pattern); return m ? parseInt(m[1]) : 0; })
     .filter(n => n > 0);
   const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
@@ -45,7 +45,7 @@ function generateNextId(cancerTypes = []) {
 }
 
 // ── ADD RESOURCE SECTION ─────────────────────────────────────────────────────
-function AddResourceSection({ saveToFile }) {
+function AddResourceSection({ saveToFile, onAdd, localAdditions }) {
   const [url, setUrl]         = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving]   = useState(false);
@@ -77,7 +77,7 @@ function AddResourceSection({ saveToFile }) {
       const cancerArr = Array.isArray(d.cancerTypes) ? d.cancerTypes : [];
       const statesArr = Array.isArray(d.states) ? d.states : [];
       setPreview({
-        id:          generateNextId(cancerArr),
+        id:          generateNextId(cancerArr, localAdditions),
         name:        d.name || "",
         description: d.description || "",
         qualifies:   d.qualifies || "",
@@ -97,7 +97,7 @@ function AddResourceSection({ saveToFile }) {
   function handleManual() {
     setError(""); setSavedName("");
     setPreview({
-      id: generateNextId([]),
+      id: generateNextId([], localAdditions),
       name: "", description: "", qualifies: "",
       type: "financial", phone: "", url: url.trim(),
       statesText: "", cancerText: "",
@@ -109,7 +109,7 @@ function AddResourceSection({ saveToFile }) {
       const updated = { ...p, [field]: value };
       if (field === "cancerText") {
         const arr = value.split(",").map(s => s.trim()).filter(Boolean);
-        updated.id = generateNextId(arr);
+        updated.id = generateNextId(arr, localAdditions);
       }
       return updated;
     });
@@ -136,6 +136,7 @@ function AddResourceSection({ saveToFile }) {
     const ok = await saveToFile({}, [], [newResource]);
     setSaving(false);
     if (ok) {
+      onAdd(newResource);           // update ManageTab list immediately
       setSavedName(preview.name);
       setPreview(null);
       setUrl("");
@@ -215,7 +216,7 @@ function AddResourceSection({ saveToFile }) {
           borderRadius: "10px", padding: "14px 16px", marginTop: "10px",
           fontSize: "13px", color: "#1a6a3a", fontWeight: 600,
         }}>
-          ✅ "{savedName}" added and deploying — reload the page in ~2 minutes to see it in the list.
+          ✅ Resource added successfully — it now appears in the list below. Changes will go live on the site in 2–3 minutes.
           <button onClick={() => setSavedName("")} style={{
             marginLeft: "12px", background: "none", border: "none",
             fontSize: "12px", color: "#27ae60", cursor: "pointer", textDecoration: "underline",
@@ -353,11 +354,11 @@ function loadOverrides() {
 }
 
 // ── PRINT MODAL ──────────────────────────────────────────────────────────────
-function PrintModal({ onClose, overrides, removed }) {
+function PrintModal({ onClose, overrides, removed, localAdditions }) {
   const [mode, setMode] = useState("az");
 
-  // Apply the same overrides + removals that the Manage tab shows
-  const effectiveResources = [...allResources]
+  // Apply the same overrides + removals + local additions that the Manage tab shows
+  const effectiveResources = [...allResources, ...(localAdditions || [])]
     .filter(r => !removed.includes(r.id))
     .map(r => ({ ...r, ...(overrides[r.id] || {}) }));
 
@@ -563,12 +564,17 @@ function ManageTab() {
     try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); }
     catch { return []; }
   });
-  const [exportMsg, setExportMsg] = useState("");
-  const [showPrint, setShowPrint] = useState(false);
+  const [exportMsg, setExportMsg]       = useState("");
+  const [showPrint, setShowPrint]       = useState(false);
   const [savingToFile, setSavingToFile] = useState(false);
   const [saveFileMsg, setSaveFileMsg]   = useState("");
+  const [localAdditions, setLocalAdditions] = useState([]);
 
-  const visible = [...allResources]
+  function handleAdd(resource) {
+    setLocalAdditions(prev => [...prev, resource]);
+  }
+
+  const visible = [...allResources, ...localAdditions]
     .filter(r => !removed.includes(r.id))
     .sort((a, b) => {
       const aName = (overrides[a.id]?.name || a.name).toLowerCase();
@@ -697,7 +703,7 @@ function ManageTab() {
   return (
     <div>
       <HelpSection />
-      <AddResourceSection saveToFile={saveToFile} />
+      <AddResourceSection saveToFile={saveToFile} onAdd={handleAdd} localAdditions={localAdditions} />
 
       {/* Top bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
@@ -779,7 +785,7 @@ function ManageTab() {
         );
       })}
 
-      {showPrint && <PrintModal onClose={() => setShowPrint(false)} overrides={overrides} removed={removed} />}
+      {showPrint && <PrintModal onClose={() => setShowPrint(false)} overrides={overrides} removed={removed} localAdditions={localAdditions} />}
 
       {editing && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
