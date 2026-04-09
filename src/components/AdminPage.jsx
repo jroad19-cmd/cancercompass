@@ -428,11 +428,16 @@ function loadOverrides() {
 }
 
 // ── PRINT MODAL ──────────────────────────────────────────────────────────────
-function PrintModal({ onClose }) {
+function PrintModal({ onClose, overrides, removed }) {
   const [mode, setMode] = useState("az");
 
+  // Apply the same overrides + removals that the Manage tab shows
+  const effectiveResources = [...allResources]
+    .filter(r => !removed.includes(r.id))
+    .map(r => ({ ...r, ...(overrides[r.id] || {}) }));
+
   function getGrouped() {
-    const sorted = [...allResources].sort((a, b) => a.name.localeCompare(b.name));
+    const sorted = [...effectiveResources].sort((a, b) => a.name.localeCompare(b.name));
     if (mode === "az") return [{ title: "All Resources (A–Z)", items: sorted }];
     if (mode === "cancer") {
       const groups = {};
@@ -501,7 +506,7 @@ ${g.items.map(r => `
       <div style={{ background: "white", borderRadius: "20px", padding: "28px", maxWidth: "420px", width: "100%" }}>
         <h3 style={{ fontFamily: "'Lora', serif", fontSize: "18px", color: "var(--navy)", marginBottom: "8px" }}>Print / Save as PDF</h3>
         <p style={{ fontSize: "13px", color: "var(--mid-gray)", marginBottom: "20px" }}>
-          Choose how to organize the resource directory. All {allResources.length} resources will be included with clickable links.
+          Choose how to organize the resource directory. All {effectiveResources.length} resources will be included with clickable links.
         </p>
         {[
           { key: "az",     label: "📋 A–Z",             desc: "All resources sorted alphabetically" },
@@ -664,8 +669,8 @@ function ManageTab() {
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Unknown error");
-      setSaveFileMsg("✅ Saved to file! Vercel is deploying…");
-      setTimeout(() => setSaveFileMsg(""), 7000);
+      setSaveFileMsg("✅ Saved to file! Vercel is deploying — reload the page in ~2 minutes to see the updated data.");
+      setTimeout(() => setSaveFileMsg(""), 15000);
       return true;
     } catch (e) {
       setSaveFileMsg(`❌ Save failed: ${e.message}`);
@@ -699,14 +704,7 @@ function ManageTab() {
       setTimeout(() => setSaveFileMsg(""), 3000);
       return;
     }
-    const ok = await saveToFile(pending, currentRemoved);
-    if (ok) {
-      // Clear localStorage after successful save — changes are now in the file
-      localStorage.removeItem(OVERRIDES_KEY);
-      localStorage.removeItem("cancercompass_removed");
-      setOverrides({});
-      setRemoved([]);
-    }
+    await saveToFile(pending, currentRemoved);
   }
 
   function saveEdit() {
@@ -736,6 +734,7 @@ function ManageTab() {
     localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
     setRemoved(updated);
     setRemoveConfirm(null);
+    saveToFile({}, [id]);
   }
 
   function exportOverrides() {
@@ -855,7 +854,7 @@ function ManageTab() {
         );
       })}
 
-      {showPrint && <PrintModal onClose={() => setShowPrint(false)} />}
+      {showPrint && <PrintModal onClose={() => setShowPrint(false)} overrides={overrides} removed={removed} />}
 
       {editing && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
@@ -963,14 +962,14 @@ export default function AdminPage() {
       {tab === "rechecks" && (
         <div>
           <div style={{
-            background: "#fde8e8", border: "1.5px solid #f5c0c0",
+            background: "#e8fdf0", border: "1.5px solid #27ae60",
             borderRadius: "10px", padding: "12px 16px", marginBottom: "16px",
-            fontSize: "13px", color: "#cc3333",
+            fontSize: "13px", color: "#1a6a3a",
           }}>
-            ⚠️ <strong>Important:</strong> URL edits made in Manage Resources are temporary and only visible to you — they will not affect other users. After fixing URLs, go to <strong>Manage Resources → Export Fixes</strong> and paste the result to Claude to make changes permanent for everyone.
+            ✅ <strong>Tip:</strong> If you find a broken link, go to the <strong>Manage Resources</strong> tab, click <strong>Edit</strong> on that resource, and click <strong>Save Changes</strong> — it will update the live site automatically within ~2 minutes.
           </div>
           <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "16px" }}>
-            Resources listed from most overdue to most recent. Click <strong>Visit →</strong> to check the link, then click <strong>✓ Mark as Reviewed</strong>. If a link is broken, go to the Manage Resources tab to update or remove it.
+            Resources listed from most overdue to most recent. Click <strong>Visit →</strong> to check the link, then click <strong>✓ Mark as Reviewed</strong>. If a link is broken or the info is wrong, go to the <strong>Manage Resources</strong> tab and click <strong>Edit</strong> to fix it permanently.
           </p>
           {(() => {
             const overrides = loadOverrides();
