@@ -138,8 +138,13 @@ function applyChanges(content, changes, removals, additions) {
   }
 
   // Insert new resources before the closing ]; of the resources array
+  // Search BACKWARDS to find the last ]; — the one that closes the resources array,
+  // not one of the earlier arrays (RESOURCE_TYPES, CANCER_TYPES, US_STATES, etc.)
   if (additions && additions.length > 0) {
-    const closingIdx = lines.findIndex(l => l.trim() === "];");
+    let closingIdx = -1;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].trim() === "];") { closingIdx = i; break; }
+    }
     if (closingIdx !== -1) {
       const newLines = additions.map(r => buildResourceLine(r));
       lines.splice(closingIdx, 0, ...newLines);
