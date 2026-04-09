@@ -541,6 +541,8 @@ function ManageTab() {
   });
   const [exportMsg, setExportMsg] = useState("");
   const [showPrint, setShowPrint] = useState(false);
+  const [savingToFile, setSavingToFile] = useState(false);
+  const [saveFileMsg, setSaveFileMsg]   = useState("");
 
   const visible = [...allResources]
     .filter(r => !removed.includes(r.id))
@@ -556,10 +558,82 @@ function ManageTab() {
     setEditing(r.id);
   }
 
+  async function saveToFile(changes, removals) {
+    setSavingToFile(true);
+    setSaveFileMsg("");
+    try {
+      const secret = process.env.REACT_APP_ADMIN_SECRET || "";
+      const res = await fetch("/api/save-resources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ changes, removals, secret }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Unknown error");
+      setSaveFileMsg("✅ Saved to file! Vercel is deploying…");
+      setTimeout(() => setSaveFileMsg(""), 7000);
+      return true;
+    } catch (e) {
+      setSaveFileMsg(`❌ Save failed: ${e.message}`);
+      setTimeout(() => setSaveFileMsg(""), 8000);
+      return false;
+    } finally {
+      setSavingToFile(false);
+    }
+  }
+
+  async function handleSaveAll() {
+    let allOverrides = {};
+    try { allOverrides = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); } catch { /* ignore */ }
+    const pending = {};
+    for (const [id, fields] of Object.entries(allOverrides)) {
+      const base = allResources.find(r => r.id === id);
+      if (!base) continue;
+      const diff = {};
+      for (const [key, val] of Object.entries(fields)) {
+        const baseVal = base[key] == null ? "" : String(base[key]);
+        const overVal = val == null ? "" : String(val);
+        if (overVal !== baseVal) diff[key] = val;
+      }
+      if (Object.keys(diff).length > 0) pending[id] = diff;
+    }
+    const currentRemoved = (() => {
+      try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; }
+    })();
+    if (Object.keys(pending).length === 0 && currentRemoved.length === 0) {
+      setSaveFileMsg("No pending changes to save.");
+      setTimeout(() => setSaveFileMsg(""), 3000);
+      return;
+    }
+    const ok = await saveToFile(pending, currentRemoved);
+    if (ok) {
+      // Clear localStorage after successful save — changes are now in the file
+      localStorage.removeItem(OVERRIDES_KEY);
+      localStorage.removeItem("cancercompass_removed");
+      setOverrides({});
+      setRemoved([]);
+    }
+  }
+
   function saveEdit() {
     const updated = { ...overrides, [editing]: { ...editForm } };
     localStorage.setItem(OVERRIDES_KEY, JSON.stringify(updated));
     setOverrides(updated);
+
+    // Diff against base and save to file immediately
+    const base = allResources.find(r => r.id === editing);
+    if (base) {
+      const diff = {};
+      for (const [key, val] of Object.entries(editForm)) {
+        const baseVal = base[key] == null ? "" : String(base[key]);
+        const overVal = val == null ? "" : String(val);
+        if (overVal !== baseVal) diff[key] = val;
+      }
+      if (Object.keys(diff).length > 0) {
+        saveToFile({ [editing]: diff }, []);
+      }
+    }
+
     setEditing(null);
   }
 
@@ -621,16 +695,25 @@ function ManageTab() {
           borderRadius: "8px", padding: "8px 16px",
           fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
         }}>📋 Export Fixes</button>
+        <button onClick={handleSaveAll} disabled={savingToFile} style={{
+          background: savingToFile ? "#aaa" : "#1a7a4a", color: "white", border: "none",
+          borderRadius: "8px", padding: "8px 16px",
+          fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+          cursor: savingToFile ? "not-allowed" : "pointer",
+        }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
       </div>
 
-      {/* Reminder banner */}
-      <div style={{
-        background: "#fef5e7", border: "1.5px solid #f0d8b0",
-        borderRadius: "10px", padding: "12px 16px", marginBottom: "16px",
-        fontSize: "13px", color: "#7a5a20",
-      }}>
-        💡 <strong>Reminder:</strong> Edits made here are temporary and visible only to you. To make changes permanent: open the Node.js command prompt, type <strong>cd C:\Users\jroad\OneDrive\Desktop\Github\cancercompass</strong> and press Enter, then type <strong>claude</strong> and press Enter. Then describe your changes and Claude Code will update the files directly.
-      </div>
+      {saveFileMsg && (
+        <div style={{
+          background: saveFileMsg.startsWith("✅") ? "#e8fdf0" : saveFileMsg.startsWith("❌") ? "#fde8e8" : "#fef5e7",
+          border: `1.5px solid ${saveFileMsg.startsWith("✅") ? "#27ae60" : saveFileMsg.startsWith("❌") ? "#cc3333" : "#f0d8b0"}`,
+          borderRadius: "10px", padding: "10px 16px", marginBottom: "12px",
+          fontSize: "13px", fontWeight: 600,
+          color: saveFileMsg.startsWith("✅") ? "#27ae60" : saveFileMsg.startsWith("❌") ? "#cc3333" : "#7a5a20",
+        }}>
+          {saveFileMsg}
+        </div>
+      )}
 
       {exportMsg && (
         <div style={{
@@ -702,11 +785,11 @@ function ManageTab() {
               <textarea value={editForm.qualifies || ""} onChange={e => setEditForm(f => ({ ...f, qualifies: e.target.value }))} style={{ minHeight: "60px" }} />
             </div>
             <div style={{
-              background: "#fef5e7", border: "1px solid #f0d8b0",
+              background: "#e8fdf0", border: "1px solid #27ae60",
               borderRadius: "8px", padding: "10px 14px", marginBottom: "16px",
-              fontSize: "12px", color: "#7a5a20",
+              fontSize: "12px", color: "#1a6a3a",
             }}>
-              ⚠️ This edit is temporary. Use <strong>Export Fixes</strong> after saving to make it permanent for all users.
+              ✅ Clicking <strong>Save Changes</strong> will write directly to resources.js and trigger a Vercel deployment.
             </div>
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => setEditing(null)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
