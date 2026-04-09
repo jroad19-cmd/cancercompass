@@ -555,7 +555,7 @@ function HelpSection() {
 }
 
 // ── MANAGE TAB ───────────────────────────────────────────────────────────────
-function ManageTab({ configOk }) {
+function ManageTab({ configOk, localAdditions, onAdd }) {
   const [overrides, setOverrides]         = useState(() => loadOverrides());
   const [editing, setEditing]             = useState(null);
   const [editForm, setEditForm]           = useState({});
@@ -570,11 +570,6 @@ function ManageTab({ configOk }) {
   const [savingToFile, setSavingToFile]     = useState(false);
   const [saveFileMsg, setSaveFileMsg]       = useState("");
   const [localOnlyMsg, setLocalOnlyMsg]     = useState(""); // persistent message when GitHub not configured
-  const [localAdditions, setLocalAdditions] = useState([]);
-
-  function handleAdd(resource) {
-    setLocalAdditions(prev => [...prev, resource]);
-  }
 
   const visible = [...allResources, ...localAdditions]
     .filter(r => !removed.includes(r.id))
@@ -639,12 +634,12 @@ function ManageTab({ configOk }) {
     const currentRemoved = (() => {
       try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; }
     })();
-    if (Object.keys(pending).length === 0 && currentRemoved.length === 0) {
+    if (Object.keys(pending).length === 0 && currentRemoved.length === 0 && localAdditions.length === 0) {
       setSaveFileMsg("No pending changes to save.");
       setTimeout(() => setSaveFileMsg(""), 3000);
       return;
     }
-    await saveToFile(pending, currentRemoved);
+    await saveToFile(pending, currentRemoved, localAdditions);
   }
 
   function saveEdit() {
@@ -722,7 +717,7 @@ function ManageTab({ configOk }) {
   return (
     <div>
       <HelpSection />
-      <AddResourceSection saveToFile={saveToFile} onAdd={handleAdd} localAdditions={localAdditions} />
+      <AddResourceSection saveToFile={saveToFile} onAdd={onAdd} localAdditions={localAdditions} />
 
       {/* Top bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
@@ -921,6 +916,12 @@ export default function AdminPage() {
   const [tab, setTab] = useState("rechecks");
   const [reviewedDates, setReviewedDates] = useState(() => loadReviewedDates());
   const [configOk, setConfigOk] = useState(null); // null=loading, true=ok, false=not configured
+  // Lifted here so localAdditions survives tab switches and is visible to both tabs
+  const [localAdditions, setLocalAdditions] = useState([]);
+
+  function handleAdd(resource) {
+    setLocalAdditions(prev => [...prev, resource]);
+  }
 
   useEffect(() => {
     fetch("/api/check-config")
@@ -929,7 +930,8 @@ export default function AdminPage() {
       .catch(() => setConfigOk(false));
   }, []);
 
-  const overdue = allResources.filter(r => daysSince(r.lastReviewed) >= 60);
+  const allVisible = [...allResources, ...localAdditions];
+  const overdue = allVisible.filter(r => daysSince(r.lastReviewed) >= 60);
 
   return (
     <div style={{ maxWidth: "800px", margin: "0 auto", padding: "24px 16px 60px" }}>
@@ -1004,7 +1006,7 @@ export default function AdminPage() {
           {(() => {
             const overrides = loadOverrides();
             const removed = (() => { try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; } })();
-            return [...allResources]
+            return [...allResources, ...localAdditions]
               .filter(r => !removed.includes(r.id))
               .map(r => ({ ...r, ...(overrides[r.id] || {}) }))
               .sort((a, b) => daysSince(getEffectiveDate(b, reviewedDates)) - daysSince(getEffectiveDate(a, reviewedDates)))
@@ -1051,7 +1053,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {tab === "manage" && <ManageTab configOk={configOk} />}
+      {tab === "manage" && <ManageTab configOk={configOk} localAdditions={localAdditions} onAdd={handleAdd} />}
     </div>
   );
 }
