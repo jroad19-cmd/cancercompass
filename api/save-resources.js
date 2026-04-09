@@ -16,7 +16,7 @@ module.exports = async function handler(req, res) {
     return res.status(403).json({ error: "Unauthorized" });
   }
 
-  const { changes = {}, removals = [] } = req.body || {};
+  const { changes = {}, removals = [], additions = [] } = req.body || {};
 
   const token = process.env.GITHUB_TOKEN;
   const repo  = process.env.GITHUB_REPO; // "owner/repo"
@@ -51,7 +51,7 @@ module.exports = async function handler(req, res) {
   // 2. Apply changes surgically
   let updated;
   try {
-    updated = applyChanges(currentContent, changes, removals);
+    updated = applyChanges(currentContent, changes, removals, additions);
   } catch (e) {
     return res.status(500).json({ error: `Failed to apply changes: ${e.message}` });
   }
@@ -61,9 +61,11 @@ module.exports = async function handler(req, res) {
   }
 
   // 3. Commit updated file back to GitHub
-  const nChanges  = Object.keys(changes).length;
-  const nRemovals = removals.length;
+  const nChanges   = Object.keys(changes).length;
+  const nRemovals  = removals.length;
+  const nAdditions = additions.length;
   const parts = [];
+  if (nAdditions > 0) parts.push(`add ${nAdditions} resource${nAdditions > 1 ? "s" : ""}`);
   if (nChanges  > 0) parts.push(`edit ${nChanges} resource${nChanges > 1 ? "s" : ""}`);
   if (nRemovals > 0) parts.push(`remove ${nRemovals} resource${nRemovals > 1 ? "s" : ""}`);
   const commitMessage = `Admin panel: ${parts.join(", ")} — ${new Date().toISOString().slice(0, 10)}`;
@@ -95,7 +97,15 @@ function escapeForJsString(str) {
   return String(str).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-function applyChanges(content, changes, removals) {
+function buildResourceLine(r) {
+  const q = v => `"${escapeForJsString(String(v ?? ""))}"`;
+  const phone = r.phone ? `"${escapeForJsString(String(r.phone))}"` : "null";
+  const cancerTypes = JSON.stringify(Array.isArray(r.cancerTypes) ? r.cancerTypes : []);
+  const states      = JSON.stringify(Array.isArray(r.states)      ? r.states      : []);
+  return `  { id:${q(r.id)}, name:${q(r.name)}, description:${q(r.description)}, type:${q(r.type)}, cancerTypes:${cancerTypes}, states:${states}, qualifies:${q(r.qualifies)}, phone:${phone}, url:${q(r.url)}, lastReviewed:${q(r.lastReviewed)} },`;
+}
+
+function applyChanges(content, changes, removals, additions) {
   let lines = content.split("\n");
 
   // Remove lines for deleted resources
@@ -114,7 +124,6 @@ function applyChanges(content, changes, removals) {
       if (!line.includes(`id:"${id}"`)) return line;
       for (const [field, value] of Object.entries(fields)) {
         if (field === "phone") {
-          // phone can be null or a quoted string
           line = line.replace(
             /phone:(?:null|"(?:[^"\\]|\\.)*")/,
             value === null ? "phone:null" : `phone:"${escapeForJsString(value)}"`
@@ -126,6 +135,15 @@ function applyChanges(content, changes, removals) {
       }
       return line;
     });
+  }
+
+  // Insert new resources before the closing ]; of the resources array
+  if (additions && additions.length > 0) {
+    const closingIdx = lines.findIndex(l => l.trim() === "];");
+    if (closingIdx !== -1) {
+      const newLines = additions.map(r => buildResourceLine(r));
+      lines.splice(closingIdx, 0, ...newLines);
+    }
   }
 
   return lines.join("\n");

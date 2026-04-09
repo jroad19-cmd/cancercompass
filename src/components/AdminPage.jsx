@@ -45,17 +45,17 @@ function generateNextId(cancerTypes = []) {
 }
 
 // ── ADD RESOURCE SECTION ─────────────────────────────────────────────────────
-function AddResourceSection() {
+function AddResourceSection({ saveToFile }) {
   const [url, setUrl]         = useState("");
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(null);
-  const [saved, setSaved]     = useState(null); // confirmation object
+  const [savedName, setSavedName] = useState("");
   const previewRef            = useRef(null);
 
   const VALID_TYPES = ["financial","medication","transportation","housing","nutrition","mental","legal","veterans","pediatric"];
 
-  // Scroll preview into view whenever it appears
   useEffect(() => {
     if (preview && previewRef.current) {
       previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -64,7 +64,7 @@ function AddResourceSection() {
 
   async function handleExtract() {
     if (!url.trim()) return;
-    setLoading(true); setError(""); setPreview(null); setSaved(null);
+    setLoading(true); setError(""); setPreview(null); setSavedName("");
     try {
       const res = await fetch("/api/extract-resource", {
         method: "POST",
@@ -77,15 +77,15 @@ function AddResourceSection() {
       const cancerArr = Array.isArray(d.cancerTypes) ? d.cancerTypes : [];
       const statesArr = Array.isArray(d.states) ? d.states : [];
       setPreview({
-        id:           generateNextId(cancerArr, statesArr),
-        name:         d.name || "",
-        description:  d.description || "",
-        qualifies:    d.qualifies || "",
-        type:         VALID_TYPES.includes(d.type) ? d.type : "financial",
-        phone:        d.phone || "",
-        url:          url.trim(),
-        statesText:   statesArr.join(", "),
-        cancerText:   cancerArr.join(", "),
+        id:          generateNextId(cancerArr),
+        name:        d.name || "",
+        description: d.description || "",
+        qualifies:   d.qualifies || "",
+        type:        VALID_TYPES.includes(d.type) ? d.type : "financial",
+        phone:       d.phone || "",
+        url:         url.trim(),
+        statesText:  statesArr.join(", "),
+        cancerText:  cancerArr.join(", "),
       });
     } catch (e) {
       setError("Network error — make sure ANTHROPIC_API_KEY is set in Vercel environment variables.");
@@ -95,11 +95,9 @@ function AddResourceSection() {
   }
 
   function handleManual() {
-    setSaved(null); setError("");
-    const cancerArr = [];
-    const statesArr = [];
+    setError(""); setSavedName("");
     setPreview({
-      id: generateNextId(cancerArr, statesArr),
+      id: generateNextId([]),
       name: "", description: "", qualifies: "",
       type: "financial", phone: "", url: url.trim(),
       statesText: "", cancerText: "",
@@ -109,61 +107,39 @@ function AddResourceSection() {
   function updatePreview(field, value) {
     setPreview(p => {
       const updated = { ...p, [field]: value };
-      // Regenerate ID if cancer types change
       if (field === "cancerText") {
         const arr = value.split(",").map(s => s.trim()).filter(Boolean);
-        updated.id = generateNextId(arr, updated.statesText.split(",").map(s => s.trim()).filter(Boolean));
+        updated.id = generateNextId(arr);
       }
       return updated;
     });
   }
 
-  function handleSavePermanently() {
-    const today = new Date().toISOString().split("T")[0];
-    const cancerArr = preview.cancerText.split(",").map(s => s.trim()).filter(Boolean);
-    const statesArr = preview.statesText.split(",").map(s => s.trim()).filter(Boolean);
-    const phoneVal  = preview.phone ? `"${preview.phone}"` : "null";
-
-    const newEntry = `  { id:"${preview.id}", name:"${preview.name}", description:"${preview.description}", type:"${preview.type}", cancerTypes:${JSON.stringify(cancerArr)}, states:${JSON.stringify(statesArr)}, qualifies:"${preview.qualifies}", phone:${phoneVal}, url:"${preview.url}", lastReviewed:"${today}" },`;
-
-    // Gather pending overrides + removals
-    const overrides = (() => { try { return JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); } catch { return {}; } })();
-    const removed   = (() => { try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; } })();
-
-    const overrideLines = Object.entries(overrides).map(([id, changes]) => {
-      const r = allResources.find(x => x.id === id);
-      return `  • ${r ? r.name : id}: ${Object.entries(changes).map(([k, v]) => `${k} → "${v}"`).join(", ")}`;
-    });
-    const removedLines = removed.map(id => {
-      const r = allResources.find(x => x.id === id);
-      return `  • Remove ${r ? r.name : id}`;
-    });
-
-    let clip = `=== NEW RESOURCE (add to src/data/resources.js) ===\n${newEntry}\n`;
-    if (overrideLines.length > 0) clip += `\n=== PENDING EDITS ===\n${overrideLines.join("\n")}\n\nOverrides JSON:\n${JSON.stringify(overrides, null, 2)}\n`;
-    if (removedLines.length > 0) clip += `\n=== PENDING REMOVALS ===\n${removedLines.join("\n")}\n`;
-
-    navigator.clipboard.writeText(clip).then(() => {
-      setSaved({
-        id:        preview.id,
-        name:      preview.name,
-        entry:     newEntry,
-        overrides: overrideLines,
-        removed:   removedLines,
-        copied:    true,
-      });
+  async function handleSave() {
+    if (!preview.name || !preview.description) return;
+    setSaving(true);
+    const today      = new Date().toISOString().split("T")[0];
+    const cancerArr  = preview.cancerText.split(",").map(s => s.trim()).filter(Boolean);
+    const statesArr  = preview.statesText.split(",").map(s => s.trim()).filter(Boolean);
+    const newResource = {
+      id:          preview.id,
+      name:        preview.name,
+      description: preview.description,
+      type:        preview.type,
+      cancerTypes: cancerArr,
+      states:      statesArr,
+      qualifies:   preview.qualifies,
+      phone:       preview.phone || null,
+      url:         preview.url,
+      lastReviewed: today,
+    };
+    const ok = await saveToFile({}, [], [newResource]);
+    setSaving(false);
+    if (ok) {
+      setSavedName(preview.name);
       setPreview(null);
       setUrl("");
-    }).catch(() => {
-      setSaved({
-        id:        preview.id,
-        name:      preview.name,
-        entry:     newEntry,
-        overrides: overrideLines,
-        removed:   removedLines,
-        copied:    false,
-      });
-    });
+    }
   }
 
   const inputStyle = {
@@ -182,7 +158,7 @@ function AddResourceSection() {
         ➕ Add New Resource
       </h3>
       <p style={{ fontSize: "13px", color: "var(--mid-gray)", margin: "0 0 14px" }}>
-        Paste a URL from any cancer support organization. Claude will visit the page and auto-fill the details for your review.
+        Paste a URL from any cancer support organization. Claude will auto-fill the details for your review before saving.
       </p>
 
       {/* URL input row — hidden while preview is open */}
@@ -207,31 +183,43 @@ function AddResourceSection() {
         >
           {loading ? "Extracting…" : "Add Resource"}
         </button>
-        {!preview && !loading && (
+        {!loading && (
           <button onClick={handleManual} style={{
             background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
             padding: "9px 14px", fontFamily: "'DM Sans', sans-serif",
             fontSize: "13px", color: "var(--mid-gray)", cursor: "pointer", whiteSpace: "nowrap",
           }}>
-            Fill manually
+            Fill Manually
           </button>
         )}
       </div>
 
-      {/* Loading */}
       {loading && (
         <div style={{ fontSize: "13px", color: "var(--teal)", marginBottom: "10px" }}>
           🔍 Claude is reading the page and extracting resource details…
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div style={{
           background: "#fde8e8", border: "1px solid #f5c0c0", borderRadius: "8px",
           padding: "10px 14px", fontSize: "13px", color: "#cc3333", marginBottom: "10px",
         }}>
           ⚠️ {error}
+        </div>
+      )}
+
+      {savedName && (
+        <div style={{
+          background: "#e8fdf0", border: "1.5px solid #27ae60",
+          borderRadius: "10px", padding: "14px 16px", marginTop: "10px",
+          fontSize: "13px", color: "#1a6a3a", fontWeight: 600,
+        }}>
+          ✅ "{savedName}" added and deploying — reload the page in ~2 minutes to see it in the list.
+          <button onClick={() => setSavedName("")} style={{
+            marginLeft: "12px", background: "none", border: "none",
+            fontSize: "12px", color: "#27ae60", cursor: "pointer", textDecoration: "underline",
+          }}>Dismiss</button>
         </div>
       )}
 
@@ -243,7 +231,7 @@ function AddResourceSection() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
             <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--navy)" }}>
-              Review & edit before saving
+              Review &amp; edit before saving
             </span>
             <span style={{
               background: "var(--teal-pale)", color: "var(--teal)",
@@ -262,14 +250,8 @@ function AddResourceSection() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               <div>
                 <label style={labelStyle}>Type</label>
-                <select
-                  value={preview.type}
-                  onChange={e => updatePreview("type", e.target.value)}
-                  style={{ ...inputStyle }}
-                >
-                  {["financial","medication","transportation","housing","nutrition","mental","legal","veterans","pediatric"].map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                <select value={preview.type} onChange={e => updatePreview("type", e.target.value)} style={{ ...inputStyle }}>
+                  {VALID_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
@@ -280,20 +262,12 @@ function AddResourceSection() {
 
             <div>
               <label style={labelStyle}>Description</label>
-              <textarea
-                value={preview.description}
-                onChange={e => updatePreview("description", e.target.value)}
-                style={{ ...inputStyle, minHeight: "70px", resize: "vertical" }}
-              />
+              <textarea value={preview.description} onChange={e => updatePreview("description", e.target.value)} style={{ ...inputStyle, minHeight: "70px", resize: "vertical" }} />
             </div>
 
             <div>
               <label style={labelStyle}>Who Qualifies</label>
-              <textarea
-                value={preview.qualifies}
-                onChange={e => updatePreview("qualifies", e.target.value)}
-                style={{ ...inputStyle, minHeight: "50px", resize: "vertical" }}
-              />
+              <textarea value={preview.qualifies} onChange={e => updatePreview("qualifies", e.target.value)} style={{ ...inputStyle, minHeight: "50px", resize: "vertical" }} />
             </div>
 
             <div>
@@ -304,21 +278,11 @@ function AddResourceSection() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
               <div>
                 <label style={labelStyle}>Cancer Types (comma-separated, or blank for all)</label>
-                <textarea
-                  value={preview.cancerText}
-                  onChange={e => updatePreview("cancerText", e.target.value)}
-                  style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }}
-                  placeholder="Breast Cancer, Ovarian Cancer…"
-                />
+                <textarea value={preview.cancerText} onChange={e => updatePreview("cancerText", e.target.value)} style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }} placeholder="Breast Cancer, Ovarian Cancer…" />
               </div>
               <div>
                 <label style={labelStyle}>States (comma-separated, or blank for national)</label>
-                <textarea
-                  value={preview.statesText}
-                  onChange={e => updatePreview("statesText", e.target.value)}
-                  style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }}
-                  placeholder="Texas, California…"
-                />
+                <textarea value={preview.statesText} onChange={e => updatePreview("statesText", e.target.value)} style={{ ...inputStyle, minHeight: "50px", resize: "vertical", fontSize: "12px" }} placeholder="Texas, California…" />
               </div>
             </div>
           </div>
@@ -332,57 +296,18 @@ function AddResourceSection() {
               Cancel
             </button>
             <button
-              onClick={handleSavePermanently}
-              disabled={!preview.name || !preview.description}
+              onClick={handleSave}
+              disabled={saving || !preview.name || !preview.description}
               style={{
-                background: (!preview.name || !preview.description) ? "#ccc" : "var(--navy)",
+                background: (saving || !preview.name || !preview.description) ? "#ccc" : "var(--navy)",
                 color: "white", border: "none", borderRadius: "8px", padding: "9px 20px",
                 fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
-                cursor: (!preview.name || !preview.description) ? "not-allowed" : "pointer", flex: 1,
+                cursor: (saving || !preview.name || !preview.description) ? "not-allowed" : "pointer", flex: 1,
               }}
             >
-              💾 Save Permanently
+              {saving ? "Saving…" : "💾 Save Permanently"}
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Confirmation */}
-      {saved && (
-        <div style={{
-          background: "#e8fdf0", border: "1.5px solid #27ae60",
-          borderRadius: "10px", padding: "16px", marginTop: "12px",
-        }}>
-          <div style={{ fontWeight: 600, color: "#27ae60", marginBottom: "8px", fontSize: "14px" }}>
-            {saved.copied ? "✅ Copied to clipboard!" : "✅ Generated — copy the entry below"}
-          </div>
-          <p style={{ fontSize: "13px", color: "#1a6633", margin: "0 0 10px" }}>
-            <strong>Added:</strong> {saved.name} <span style={{ opacity: 0.7 }}>({saved.id})</span>
-            {saved.overrides.length > 0 && (
-              <><br /><strong>Pending edits also included:</strong><br />{saved.overrides.map((l, i) => <span key={i}>{l}<br /></span>)}</>
-            )}
-            {saved.removed.length > 0 && (
-              <><br /><strong>Pending removals also included:</strong><br />{saved.removed.map((l, i) => <span key={i}>{l}<br /></span>)}</>
-            )}
-          </p>
-          <div style={{
-            background: "#f0fff6", border: "1px solid #b0e0c0", borderRadius: "6px",
-            padding: "10px 12px", fontFamily: "monospace", fontSize: "11px",
-            color: "#1a3a1a", whiteSpace: "pre-wrap", wordBreak: "break-all",
-            marginBottom: "10px", maxHeight: "120px", overflowY: "auto",
-          }}>
-            {saved.entry}
-          </div>
-          <p style={{ fontSize: "12px", color: "#27ae60", margin: 0 }}>
-            Open Claude Code, paste the clipboard contents, and Claude will update <code>src/data/resources.js</code> permanently.
-          </p>
-          <button onClick={() => setSaved(null)} style={{
-            marginTop: "10px", background: "none", border: "1px solid #27ae60",
-            borderRadius: "6px", padding: "5px 14px", fontSize: "12px",
-            color: "#27ae60", cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          }}>
-            Dismiss
-          </button>
         </div>
       )}
     </div>
@@ -657,7 +582,7 @@ function ManageTab() {
     setEditing(r.id);
   }
 
-  async function saveToFile(changes, removals) {
+  async function saveToFile(changes, removals, additions = []) {
     setSavingToFile(true);
     setSaveFileMsg("");
     try {
@@ -665,7 +590,7 @@ function ManageTab() {
       const res = await fetch("/api/save-resources", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ changes, removals, secret }),
+        body: JSON.stringify({ changes, removals, additions, secret }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Unknown error");
@@ -772,7 +697,7 @@ function ManageTab() {
   return (
     <div>
       <HelpSection />
-      <AddResourceSection />
+      <AddResourceSection saveToFile={saveToFile} />
 
       {/* Top bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
