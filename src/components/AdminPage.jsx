@@ -577,7 +577,15 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
   const [savingToFile, setSavingToFile]     = useState(false);
   const [saveFileMsg, setSaveFileMsg]       = useState("");
   const [localOnlyMsg, setLocalOnlyMsg]     = useState("");
-  const [pendingSummary, setPendingSummary] = useState(null); // confirmation before save
+  const [pendingSummary, setPendingSummary] = useState(null);
+  const [reloadCountdown, setReloadCountdown] = useState(null); // null = idle, N = seconds until reload
+
+  useEffect(() => {
+    if (reloadCountdown === null) return;
+    if (reloadCountdown === 0) { window.location.reload(true); return; }
+    const t = setTimeout(() => setReloadCountdown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [reloadCountdown]);
 
   const visible = [...allResources, ...localAdditions]
     .filter(r => !removed.includes(r.id))
@@ -669,12 +677,16 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     setPendingSummary(null);
     const ok = await saveToFile(pending, removals, additions);
     if (ok) {
-      // Clear all localStorage — changes are now permanent in resources.js
+      // Clear localStorage overrides and removals — permanently written to resources.js
+      // Do NOT clear localAdditions: the Vercel deploy hasn't finished yet, so the new
+      // resources aren't in the bundle. They stay visible in localAdditions until the
+      // auto-reload picks up the fresh bundle (where they're now permanent).
       localStorage.removeItem(OVERRIDES_KEY);
       localStorage.removeItem("cancercompass_removed");
       setOverrides({});
       setRemoved([]);
-      onSaveSuccess(); // clears localAdditions in AdminPage
+      setSaveFileMsg(""); // clear the generic success msg; countdown replaces it
+      setReloadCountdown(20);
     }
   }
 
@@ -802,6 +814,22 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
             borderRadius: "8px", padding: "9px 20px",
             fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 700, cursor: "pointer",
           }}>📋 Export Fixes — Copy Changes to Clipboard</button>
+        </div>
+      )}
+
+      {reloadCountdown !== null && (
+        <div style={{
+          background: "#e8fdf0", border: "2px solid #27ae60",
+          borderRadius: "10px", padding: "14px 18px", marginBottom: "12px",
+          fontSize: "14px", fontWeight: 600, color: "#1a6a3a",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span>✅ Saved successfully. Reloading in {reloadCountdown} second{reloadCountdown !== 1 ? "s" : ""} to pick up the latest version…</span>
+          <button onClick={() => { setReloadCountdown(null); setSaveFileMsg("✅ Saved. Reload manually when ready."); setTimeout(() => setSaveFileMsg(""), 10000); }} style={{
+            background: "none", border: "1px solid #27ae60", borderRadius: "6px",
+            padding: "4px 10px", fontSize: "12px", color: "#27ae60", cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", marginLeft: "12px", whiteSpace: "nowrap",
+          }}>Cancel reload</button>
         </div>
       )}
 
