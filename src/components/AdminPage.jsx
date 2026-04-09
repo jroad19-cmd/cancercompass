@@ -529,6 +529,100 @@ ${g.items.map(r => `
   );
 }
 
+// ── HELP SECTION ─────────────────────────────────────────────────────────────
+function HelpSection() {
+  const [open, setOpen] = useState(false);
+
+  const sections = [
+    {
+      heading: "How the admin panel works",
+      items: [
+        "The resource list below shows all 180+ resources currently live in the app.",
+        "Click Edit on any resource to change its name, URL, phone number, description, or eligibility text.",
+        "Click Save Changes in the edit window to save that change permanently to the file and deploy it live — no copy/paste needed.",
+        "Click Remove to delete a resource permanently for all users.",
+        "Changes go live on cancerhelpfinder.org automatically within 2–3 minutes.",
+      ],
+    },
+    {
+      heading: "The Print / PDF button",
+      items: [
+        "The Print / PDF button creates a printable version of all resources — useful for a full review.",
+        "The data in the PDF always matches what is currently live in the app.",
+        "Use it to spot wrong URLs, outdated phone numbers, or inaccurate descriptions.",
+        "If you find something wrong in the PDF, find that resource in the list below and click Edit to fix it.",
+      ],
+    },
+    {
+      heading: "Adding new resources",
+      items: [
+        "Paste a URL into the Add Resource box at the top and click Add Resource — Claude will try to fill in the name, description, eligibility, and other fields automatically.",
+        "Review the pre-filled details, make any corrections, then click Save Permanently.",
+        "Or click Fill Manually to enter all fields yourself without using AI.",
+      ],
+    },
+    {
+      heading: "Keeping data accurate",
+      items: [
+        "Always use the Edit button to make corrections — it writes directly to the live file.",
+        "If a URL looks wrong, verify it in a browser first, then update it using Edit.",
+        "Phone numbers, descriptions, and eligibility text can all be updated the same way.",
+      ],
+    },
+    {
+      heading: "Working with Claude Code",
+      items: [
+        "Claude Code is only needed for bulk changes, adding new features, or fixing technical problems.",
+        "For routine edits — fixing a URL, updating a phone number, changing a description — use the Edit button here instead.",
+        "If Claude Code makes changes to the file, they will automatically appear here within 2–3 minutes after deployment.",
+      ],
+    },
+  ];
+
+  return (
+    <div style={{
+      border: "1.5px solid #c8e0f4", borderRadius: "12px",
+      marginBottom: "24px", overflow: "hidden",
+    }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          background: "#eaf4fd", border: "none", padding: "14px 18px",
+          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        <span style={{ fontWeight: 700, fontSize: "14px", color: "#1a4a6e" }}>
+          📖 How to use this admin panel
+        </span>
+        <span style={{ fontSize: "18px", color: "#1a4a6e", lineHeight: 1 }}>{open ? "▲" : "▼"}</span>
+      </button>
+
+      {open && (
+        <div style={{ padding: "18px 20px", background: "white" }}>
+          {sections.map(({ heading, items }) => (
+            <div key={heading} style={{ marginBottom: "18px" }}>
+              <div style={{
+                fontWeight: 700, fontSize: "13px", color: "var(--navy)",
+                marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em",
+              }}>
+                {heading}
+              </div>
+              <ul style={{ margin: 0, paddingLeft: "18px" }}>
+                {items.map((item, i) => (
+                  <li key={i} style={{ fontSize: "13px", color: "#3a3a35", marginBottom: "5px", lineHeight: "1.5" }}>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── MANAGE TAB ───────────────────────────────────────────────────────────────
 function ManageTab() {
   const [overrides, setOverrides]         = useState(() => loadOverrides());
@@ -678,6 +772,7 @@ function ManageTab() {
 
   return (
     <div>
+      <HelpSection />
       <AddResourceSection />
 
       {/* Top bar */}
