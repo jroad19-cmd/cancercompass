@@ -555,7 +555,7 @@ function HelpSection() {
 }
 
 // ── MANAGE TAB ───────────────────────────────────────────────────────────────
-function ManageTab() {
+function ManageTab({ configOk }) {
   const [overrides, setOverrides]         = useState(() => loadOverrides());
   const [editing, setEditing]             = useState(null);
   const [editForm, setEditForm]           = useState({});
@@ -564,10 +564,12 @@ function ManageTab() {
     try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); }
     catch { return []; }
   });
-  const [exportMsg, setExportMsg]       = useState("");
-  const [showPrint, setShowPrint]       = useState(false);
-  const [savingToFile, setSavingToFile] = useState(false);
-  const [saveFileMsg, setSaveFileMsg]   = useState("");
+  const [exportMsg, setExportMsg]           = useState("");
+  const [exportContent, setExportContent]   = useState(""); // on-screen display of exported JSON
+  const [showPrint, setShowPrint]           = useState(false);
+  const [savingToFile, setSavingToFile]     = useState(false);
+  const [saveFileMsg, setSaveFileMsg]       = useState("");
+  const [localOnlyMsg, setLocalOnlyMsg]     = useState(""); // persistent message when GitHub not configured
   const [localAdditions, setLocalAdditions] = useState([]);
 
   function handleAdd(resource) {
@@ -600,12 +602,19 @@ function ManageTab() {
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Unknown error");
+      setLocalOnlyMsg(""); // clear any previous local-only warning on successful save
       setSaveFileMsg("✅ Saved to file! Vercel is deploying — reload the page in ~2 minutes to see the updated data.");
       setTimeout(() => setSaveFileMsg(""), 15000);
       return true;
     } catch (e) {
-      setSaveFileMsg(`❌ Save failed: ${e.message}`);
-      setTimeout(() => setSaveFileMsg(""), 8000);
+      const isConfigError = e.message.includes("env vars must be set") || e.message.includes("GITHUB_TOKEN");
+      if (isConfigError) {
+        // Persistent — no auto-dismiss
+        setLocalOnlyMsg("Your changes are saved locally in this browser only. To make them permanent, use Export Fixes below and paste to Claude Code.");
+      } else {
+        setSaveFileMsg(`❌ Save failed: ${e.message}`);
+        setTimeout(() => setSaveFileMsg(""), 8000);
+      }
       return false;
     } finally {
       setSavingToFile(false);
@@ -686,17 +695,27 @@ function ManageTab() {
       if (Object.keys(diff).length > 0) pending[id] = diff;
     }
 
-    if (Object.keys(pending).length === 0) {
-      setExportMsg("No pending fixes to export.");
+    const currentRemoved = (() => { try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; } })();
+
+    if (Object.keys(pending).length === 0 && currentRemoved.length === 0 && localAdditions.length === 0) {
+      setExportMsg("No pending changes to export.");
       setTimeout(() => setExportMsg(""), 3000);
       return;
     }
-    navigator.clipboard.writeText(JSON.stringify(pending, null, 2)).then(() => {
-      setExportMsg(`✅ Copied! ${Object.keys(pending).length} pending fix(es) — paste to Claude.`);
-      setTimeout(() => setExportMsg(""), 5000);
+
+    const exportObj = {};
+    if (Object.keys(pending).length > 0)  exportObj.edits    = pending;
+    if (currentRemoved.length > 0)        exportObj.removals = currentRemoved;
+    if (localAdditions.length > 0)        exportObj.additions = localAdditions.map(r => r.id + " — " + r.name);
+    const text = JSON.stringify(exportObj, null, 2);
+
+    // Show on screen immediately (regardless of clipboard success)
+    setExportContent(text);
+
+    navigator.clipboard.writeText(text).then(() => {
+      setExportMsg("✅ Copied to clipboard! Paste this into Claude Code to make changes permanent.");
     }).catch(() => {
-      setExportMsg("❌ Copy failed — try again.");
-      setTimeout(() => setExportMsg(""), 3000);
+      setExportMsg("⚠️ Could not copy automatically — select all text below and copy manually.");
     });
   }
 
@@ -716,25 +735,45 @@ function ManageTab() {
           fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
         }}>🖨️ Print / PDF</button>
         <button onClick={exportOverrides} style={{
-          background: "var(--teal)", color: "white", border: "none",
-          borderRadius: "8px", padding: "8px 16px",
-          fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
-        }}>📋 Export Fixes</button>
-        <button onClick={handleSaveAll} disabled={savingToFile} style={{
-          background: savingToFile ? "#aaa" : "#1a7a4a", color: "white", border: "none",
-          borderRadius: "8px", padding: "8px 16px",
-          fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
-          cursor: savingToFile ? "not-allowed" : "pointer",
-        }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
+          background: configOk === false ? "#d4780a" : "var(--teal)", color: "white", border: "none",
+          borderRadius: "8px", padding: configOk === false ? "10px 20px" : "8px 16px",
+          fontFamily: "'DM Sans', sans-serif", fontSize: configOk === false ? "14px" : "13px", fontWeight: 700, cursor: "pointer",
+          boxShadow: configOk === false ? "0 2px 8px rgba(212,120,10,0.4)" : "none",
+        }}>📋 Export Fixes{configOk === false ? " ← Use This" : ""}</button>
+        {configOk !== false && (
+          <button onClick={handleSaveAll} disabled={savingToFile} style={{
+            background: savingToFile ? "#aaa" : "#1a7a4a", color: "white", border: "none",
+            borderRadius: "8px", padding: "8px 16px",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
+            cursor: savingToFile ? "not-allowed" : "pointer",
+          }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
+        )}
       </div>
+
+      {/* Persistent local-only warning (shown after a failed save due to missing env vars) */}
+      {localOnlyMsg && (
+        <div style={{
+          background: "#fff3cd", border: "2px solid #e6a817",
+          borderRadius: "10px", padding: "14px 18px", marginBottom: "16px",
+        }}>
+          <div style={{ fontWeight: 700, fontSize: "14px", color: "#7a4a00", marginBottom: "8px" }}>
+            ⚠️ {localOnlyMsg}
+          </div>
+          <button onClick={exportOverrides} style={{
+            background: "#d4780a", color: "white", border: "none",
+            borderRadius: "8px", padding: "9px 20px",
+            fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 700, cursor: "pointer",
+          }}>📋 Export Fixes — Copy Changes to Clipboard</button>
+        </div>
+      )}
 
       {saveFileMsg && (
         <div style={{
-          background: saveFileMsg.startsWith("✅") ? "#e8fdf0" : saveFileMsg.startsWith("❌") ? "#fde8e8" : "#fef5e7",
-          border: `1.5px solid ${saveFileMsg.startsWith("✅") ? "#27ae60" : saveFileMsg.startsWith("❌") ? "#cc3333" : "#f0d8b0"}`,
+          background: saveFileMsg.startsWith("✅") ? "#e8fdf0" : "#fde8e8",
+          border: `1.5px solid ${saveFileMsg.startsWith("✅") ? "#27ae60" : "#cc3333"}`,
           borderRadius: "10px", padding: "10px 16px", marginBottom: "12px",
           fontSize: "13px", fontWeight: 600,
-          color: saveFileMsg.startsWith("✅") ? "#27ae60" : saveFileMsg.startsWith("❌") ? "#cc3333" : "#7a5a20",
+          color: saveFileMsg.startsWith("✅") ? "#27ae60" : "#cc3333",
         }}>
           {saveFileMsg}
         </div>
@@ -742,13 +781,45 @@ function ManageTab() {
 
       {exportMsg && (
         <div style={{
-          background: exportMsg.startsWith("✅") ? "#e8fdf0" : "#fde8e8",
-          border: `1.5px solid ${exportMsg.startsWith("✅") ? "#27ae60" : "#cc3333"}`,
+          background: exportMsg.startsWith("✅") ? "#e8fdf0" : exportMsg.startsWith("⚠️") ? "#fff3cd" : "#fde8e8",
+          border: `1.5px solid ${exportMsg.startsWith("✅") ? "#27ae60" : exportMsg.startsWith("⚠️") ? "#e6a817" : "#cc3333"}`,
           borderRadius: "10px", padding: "10px 16px", marginBottom: "12px",
           fontSize: "13px", fontWeight: 600,
-          color: exportMsg.startsWith("✅") ? "#27ae60" : "#cc3333",
+          color: exportMsg.startsWith("✅") ? "#27ae60" : exportMsg.startsWith("⚠️") ? "#7a4a00" : "#cc3333",
         }}>
           {exportMsg}
+        </div>
+      )}
+
+      {/* On-screen display of exported changes */}
+      {exportContent && (
+        <div style={{
+          background: "#f8f9fa", border: "1.5px solid #c8c8c0",
+          borderRadius: "10px", padding: "16px", marginBottom: "16px",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+            <span style={{ fontWeight: 700, fontSize: "13px", color: "var(--navy)" }}>
+              📄 Pending changes — paste this to Claude Code
+            </span>
+            <button onClick={() => setExportContent("")} style={{
+              background: "none", border: "none", fontSize: "18px", cursor: "pointer",
+              color: "var(--mid-gray)", lineHeight: 1,
+            }}>✕</button>
+          </div>
+          <textarea
+            readOnly
+            value={exportContent}
+            onClick={e => e.target.select()}
+            style={{
+              width: "100%", minHeight: "160px", fontFamily: "monospace", fontSize: "11px",
+              border: "1px solid #ddd", borderRadius: "6px", padding: "10px",
+              background: "white", boxSizing: "border-box", resize: "vertical",
+              color: "#1a1a1a",
+            }}
+          />
+          <p style={{ fontSize: "12px", color: "var(--mid-gray)", margin: "8px 0 0" }}>
+            Click the text area to select all, then copy and paste into Claude Code. Claude will apply these changes permanently to resources.js.
+          </p>
         </div>
       )}
 
@@ -849,6 +920,14 @@ function ManageTab() {
 export default function AdminPage() {
   const [tab, setTab] = useState("rechecks");
   const [reviewedDates, setReviewedDates] = useState(() => loadReviewedDates());
+  const [configOk, setConfigOk] = useState(null); // null=loading, true=ok, false=not configured
+
+  useEffect(() => {
+    fetch("/api/check-config")
+      .then(r => r.json())
+      .then(d => setConfigOk(d.configured))
+      .catch(() => setConfigOk(false));
+  }, []);
 
   const overdue = allResources.filter(r => daysSince(r.lastReviewed) >= 60);
 
@@ -860,6 +939,26 @@ export default function AdminPage() {
       <p style={{ fontSize: "14px", color: "var(--mid-gray)", marginBottom: "24px" }}>
         Private area — CancerCompass resource management
       </p>
+
+      {configOk === false && (
+        <div style={{
+          background: "#fff3cd", border: "2px solid #e6a817",
+          borderRadius: "12px", padding: "16px 20px", marginBottom: "20px",
+          display: "flex", alignItems: "flex-start", gap: "12px",
+        }}>
+          <span style={{ fontSize: "22px", flexShrink: 0 }}>⚠️</span>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "15px", color: "#7a4a00", marginBottom: "4px" }}>
+              Direct save to file is not configured
+            </div>
+            <div style={{ fontSize: "13px", color: "#7a4a00", lineHeight: "1.5" }}>
+              The GitHub token has not been set up yet. <strong>Your edits, adds, and removes are only saved in this browser.</strong> Other users and the live site will not see them until you use <strong>Export Fixes</strong> in the Manage Resources tab and paste the result to Claude Code.
+              <br /><br />
+              To enable direct saving: add <code style={{ background: "#fde68a", padding: "1px 5px", borderRadius: "3px" }}>GITHUB_TOKEN</code> and <code style={{ background: "#fde68a", padding: "1px 5px", borderRadius: "3px" }}>GITHUB_REPO</code> to your Vercel environment variables. Set <code style={{ background: "#fde68a", padding: "1px 5px", borderRadius: "3px" }}>GITHUB_REPO</code> to <code style={{ background: "#fde68a", padding: "1px 5px", borderRadius: "3px" }}>jroad19-cmd/cancercompass</code>.
+            </div>
+          </div>
+        </div>
+      )}
 
       {overdue.length > 0 && (
         <div style={{
@@ -952,7 +1051,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {tab === "manage" && <ManageTab />}
+      {tab === "manage" && <ManageTab configOk={configOk} />}
     </div>
   );
 }
