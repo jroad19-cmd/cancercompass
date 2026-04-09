@@ -555,21 +555,29 @@ function HelpSection() {
 }
 
 // ── MANAGE TAB ───────────────────────────────────────────────────────────────
-function ManageTab({ configOk, localAdditions, onAdd }) {
+function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
   const [overrides, setOverrides]         = useState(() => loadOverrides());
   const [editing, setEditing]             = useState(null);
   const [editForm, setEditForm]           = useState({});
   const [removeConfirm, setRemoveConfirm] = useState(null);
   const [removed, setRemoved]             = useState(() => {
-    try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); }
-    catch { return []; }
+    try {
+      const stored = JSON.parse(localStorage.getItem("cancercompass_removed") || "[]");
+      // Drop stale IDs that no longer exist in resources.js (from old sessions)
+      const valid = stored.filter(id => allResources.some(r => r.id === id));
+      if (valid.length !== stored.length) {
+        localStorage.setItem("cancercompass_removed", JSON.stringify(valid));
+      }
+      return valid;
+    } catch { return []; }
   });
   const [exportMsg, setExportMsg]           = useState("");
-  const [exportContent, setExportContent]   = useState(""); // on-screen display of exported JSON
+  const [exportContent, setExportContent]   = useState("");
   const [showPrint, setShowPrint]           = useState(false);
   const [savingToFile, setSavingToFile]     = useState(false);
   const [saveFileMsg, setSaveFileMsg]       = useState("");
-  const [localOnlyMsg, setLocalOnlyMsg]     = useState(""); // persistent message when GitHub not configured
+  const [localOnlyMsg, setLocalOnlyMsg]     = useState("");
+  const [pendingSummary, setPendingSummary] = useState(null); // confirmation before save
 
   const visible = [...allResources, ...localAdditions]
     .filter(r => !removed.includes(r.id))
@@ -616,7 +624,19 @@ function ManageTab({ configOk, localAdditions, onAdd }) {
     }
   }
 
-  async function handleSaveAll() {
+  function clearAllPending() {
+    localStorage.removeItem(OVERRIDES_KEY);
+    localStorage.removeItem("cancercompass_removed");
+    setOverrides({});
+    setRemoved([]);
+    onSaveSuccess(); // clears localAdditions in AdminPage
+    setExportContent("");
+    setLocalOnlyMsg("");
+    setSaveFileMsg("✅ All pending changes cleared.");
+    setTimeout(() => setSaveFileMsg(""), 3000);
+  }
+
+  function handleSaveAll() {
     let allOverrides = {};
     try { allOverrides = JSON.parse(localStorage.getItem(OVERRIDES_KEY) || "{}"); } catch { /* ignore */ }
     const pending = {};
@@ -639,7 +659,23 @@ function ManageTab({ configOk, localAdditions, onAdd }) {
       setTimeout(() => setSaveFileMsg(""), 3000);
       return;
     }
-    await saveToFile(pending, currentRemoved, localAdditions);
+    // Show confirmation summary instead of saving immediately
+    setPendingSummary({ pending, removals: currentRemoved, additions: localAdditions });
+  }
+
+  async function confirmSave() {
+    if (!pendingSummary) return;
+    const { pending, removals, additions } = pendingSummary;
+    setPendingSummary(null);
+    const ok = await saveToFile(pending, removals, additions);
+    if (ok) {
+      // Clear all localStorage — changes are now permanent in resources.js
+      localStorage.removeItem(OVERRIDES_KEY);
+      localStorage.removeItem("cancercompass_removed");
+      setOverrides({});
+      setRemoved([]);
+      onSaveSuccess(); // clears localAdditions in AdminPage
+    }
   }
 
   function saveEdit() {
@@ -743,6 +779,13 @@ function ManageTab({ configOk, localAdditions, onAdd }) {
             cursor: savingToFile ? "not-allowed" : "pointer",
           }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
         )}
+        <button onClick={clearAllPending} style={{
+          background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
+          padding: "7px 14px", fontFamily: "'DM Sans', sans-serif",
+          fontSize: "12px", color: "#888", cursor: "pointer",
+        }} title="Wipe all pending edits, removals, and additions from this browser">
+          🗑 Clear Pending
+        </button>
       </div>
 
       {/* Persistent local-only warning (shown after a failed save due to missing env vars) */}
@@ -852,6 +895,49 @@ function ManageTab({ configOk, localAdditions, onAdd }) {
       })}
 
       {showPrint && <PrintModal onClose={() => setShowPrint(false)} overrides={overrides} removed={removed} localAdditions={localAdditions} />}
+
+      {/* Save to File confirmation modal */}
+      {pendingSummary && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+          <div style={{ background: "white", borderRadius: "20px", padding: "28px", maxWidth: "420px", width: "100%" }}>
+            <h3 style={{ fontFamily: "'Lora', serif", fontSize: "18px", color: "var(--navy)", marginBottom: "16px" }}>
+              Confirm Save to File
+            </h3>
+            <p style={{ fontSize: "14px", color: "#5a5a55", marginBottom: "16px" }}>
+              About to write permanently to resources.js and deploy:
+            </p>
+            <div style={{ background: "#f4f4f0", borderRadius: "10px", padding: "14px 18px", marginBottom: "20px" }}>
+              {[
+                { label: "New resources to add", count: pendingSummary.additions.length, color: "#27ae60" },
+                { label: "Existing resources to edit", count: Object.keys(pendingSummary.pending).length, color: "#1a4a8a" },
+                { label: "Resources to remove", count: pendingSummary.removals.length, color: "#cc3333" },
+              ].map(({ label, count, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", marginBottom: "6px" }}>
+                  <span style={{ color: "#3a3a35" }}>{label}</span>
+                  <span style={{ fontWeight: 700, color: count > 0 ? color : "#aaa" }}>{count}</span>
+                </div>
+              ))}
+            </div>
+            {pendingSummary.removals.length > 0 && (
+              <div style={{ background: "#fde8e8", border: "1px solid #f5c0c0", borderRadius: "8px", padding: "10px 14px", marginBottom: "16px", fontSize: "12px", color: "#cc3333" }}>
+                ⚠️ Removing: {pendingSummary.removals.map(id => {
+                  const r = allResources.find(x => x.id === id);
+                  return r ? r.name : id;
+                }).join(", ")}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setPendingSummary(null)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
+              <button onClick={confirmSave} disabled={savingToFile} style={{
+                flex: 2, background: savingToFile ? "#aaa" : "#1a7a4a", color: "white", border: "none",
+                borderRadius: "10px", padding: "12px",
+                fontFamily: "'DM Sans', sans-serif", fontSize: "14px", fontWeight: 600,
+                cursor: savingToFile ? "not-allowed" : "pointer",
+              }}>{savingToFile ? "Saving…" : "✅ Yes, Save to File"}</button>
+            </div>
+          </div>
+        </div>
+      )}}
 
       {editing && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
@@ -1053,7 +1139,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {tab === "manage" && <ManageTab configOk={configOk} localAdditions={localAdditions} onAdd={handleAdd} />}
+      {tab === "manage" && <ManageTab configOk={configOk} localAdditions={localAdditions} onAdd={handleAdd} onSaveSuccess={() => setLocalAdditions([])} />}
     </div>
   );
 }
