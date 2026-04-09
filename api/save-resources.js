@@ -3,6 +3,8 @@
 // Required env vars: GITHUB_TOKEN (PAT with contents:write), GITHUB_REPO (e.g. "jroad19-cmd/cancercompass")
 // Optional env var:  ADMIN_SECRET (if set, requests must include matching secret field)
 
+const { validateContent } = require("./_validate");
+
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -59,6 +61,26 @@ module.exports = async function handler(req, res) {
   if (updated === currentContent) {
     return res.status(200).json({ success: true, message: "No changes detected — file unchanged." });
   }
+
+  // 2b. Integrity check — abort if the updated file is corrupted
+  const validation = validateContent(updated, {
+    additions,
+    removals,
+    originalContent: currentContent,
+  });
+  if (!validation.valid) {
+    console.error("[save-resources] INTEGRITY CHECK FAILED — file NOT written to GitHub");
+    console.error("[save-resources] Errors:", validation.errors);
+    console.error("[save-resources] Stats: original count =", validation.originalCount, "| new count =", validation.count);
+    console.error("[save-resources] additions:", additions.map((r) => r.id), "| removals:", removals);
+    return res.status(422).json({
+      error: `Integrity check failed — file was NOT saved:\n${validation.errors.join("\n")}`,
+      details: validation.errors,
+    });
+  }
+  console.log(
+    `[save-resources] Integrity check passed: ${validation.originalCount} → ${validation.count} resources`
+  );
 
   // 3. Commit updated file back to GitHub
   const nChanges   = Object.keys(changes).length;

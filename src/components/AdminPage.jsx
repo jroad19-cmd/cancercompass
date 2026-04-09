@@ -589,6 +589,8 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
   const [reloadCountdown, setReloadCountdown] = useState(null); // null = idle, N = seconds until reload
   // Tracks which localAdditions indices have been locally removed (by index to avoid ID collision)
   const [localRemovedIdxs, setLocalRemovedIdxs] = useState(new Set());
+  const [verifyResult, setVerifyResult]         = useState(null);  // null | { valid, message?, errors?, count }
+  const [verifying, setVerifying]               = useState(false);
 
   useEffect(() => {
     if (reloadCountdown === null) return;
@@ -648,6 +650,20 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
       return false;
     } finally {
       setSavingToFile(false);
+    }
+  }
+
+  async function handleVerify() {
+    setVerifying(true);
+    setVerifyResult(null);
+    try {
+      const res = await fetch("/api/verify-resources");
+      const json = await res.json();
+      setVerifyResult(json);
+    } catch (e) {
+      setVerifyResult({ valid: false, errors: [`Network error: ${e.message}`] });
+    } finally {
+      setVerifying(false);
     }
   }
 
@@ -831,6 +847,13 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
             cursor: savingToFile ? "not-allowed" : "pointer",
           }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
         )}
+        <button onClick={handleVerify} disabled={verifying} style={{
+          background: "none", border: "1.5px solid #b0c8e8", borderRadius: "8px",
+          padding: "7px 14px", fontFamily: "'DM Sans', sans-serif",
+          fontSize: "12px", color: "#2a5a8a", cursor: verifying ? "not-allowed" : "pointer",
+        }} title="Check that resources.js has no duplicates, no corruption, and valid syntax">
+          {verifying ? "Checking…" : "🔍 Verify Integrity"}
+        </button>
         <button onClick={clearAllPending} style={{
           background: "none", border: "1.5px solid #e0e0db", borderRadius: "8px",
           padding: "7px 14px", fontFamily: "'DM Sans', sans-serif",
@@ -839,6 +862,38 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
           🗑 Clear Pending
         </button>
       </div>
+
+      {/* Verify integrity result banner */}
+      {verifyResult && (
+        <div style={{
+          padding: "12px 16px", borderRadius: "8px", marginBottom: "12px",
+          fontSize: "13px", lineHeight: 1.5,
+          background: verifyResult.valid ? "#e8fdf0" : "#fdf0f0",
+          border: `1.5px solid ${verifyResult.valid ? "#27ae60" : "#cc3333"}`,
+          color: verifyResult.valid ? "#1a6a3a" : "#8b1a1a",
+        }}>
+          {verifyResult.valid ? (
+            <span>✅ {verifyResult.message}</span>
+          ) : (
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: "6px" }}>❌ Integrity check failed:</div>
+              {(verifyResult.errors || [verifyResult.error]).map((e, i) => (
+                <div key={i} style={{ marginLeft: "12px" }}>• {e}</div>
+              ))}
+              {verifyResult.count >= 0 && (
+                <div style={{ marginTop: "6px", color: "#b03030", fontSize: "12px" }}>
+                  Resources found in array: {verifyResult.count}
+                </div>
+              )}
+            </div>
+          )}
+          <button onClick={() => setVerifyResult(null)} style={{
+            float: "right", background: "none", border: "none",
+            cursor: "pointer", fontSize: "16px", lineHeight: 1, marginTop: "-2px",
+            color: verifyResult.valid ? "#1a6a3a" : "#8b1a1a",
+          }}>✕</button>
+        </div>
+      )}
 
       {/* Persistent local-only warning (shown after a failed save due to missing env vars) */}
       {localOnlyMsg && (
