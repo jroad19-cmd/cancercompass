@@ -36,12 +36,20 @@ function generateNextId(cancerTypes = [], extraResources = []) {
   if (cancerTypes.length === 1 && CANCER_PREFIX_MAP[cancerTypes[0]]) {
     prefix = CANCER_PREFIX_MAP[cancerTypes[0]];
   }
+  const allKnown = [...allResources, ...extraResources];
+  const usedIds = new Set(allKnown.map(r => r.id));
   const pattern = new RegExp("^" + prefix + "(\\d+)$");
-  const nums = [...allResources, ...extraResources]
+  const nums = allKnown
     .map(r => { const m = r.id.match(pattern); return m ? parseInt(m[1]) : 0; })
     .filter(n => n > 0);
-  const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-  return prefix + String(next).padStart(3, "0");
+  let next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+  let candidate = prefix + String(next).padStart(3, "0");
+  // Safety loop: guarantee uniqueness even if IDs are non-sequential or contain gaps
+  while (usedIds.has(candidate)) {
+    next++;
+    candidate = prefix + String(next).padStart(3, "0");
+  }
+  return candidate;
 }
 
 // ── ADD RESOURCE SECTION ─────────────────────────────────────────────────────
@@ -136,7 +144,7 @@ function AddResourceSection({ saveToFile, onAdd, localAdditions }) {
     const ok = await saveToFile({}, [], [newResource]);
     setSaving(false);
     if (ok) {
-      onAdd(newResource);           // update ManageTab list immediately
+      onAdd(newResource, true);     // persisted=true: already written to file, skip in batch save
       setSavedName(preview.name);
       setPreview(null);
       setUrl("");
@@ -579,6 +587,8 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
   const [localOnlyMsg, setLocalOnlyMsg]     = useState("");
   const [pendingSummary, setPendingSummary] = useState(null);
   const [reloadCountdown, setReloadCountdown] = useState(null); // null = idle, N = seconds until reload
+  // Tracks which localAdditions indices have been locally removed (by index to avoid ID collision)
+  const [localRemovedIdxs, setLocalRemovedIdxs] = useState(new Set());
 
   useEffect(() => {
     if (reloadCountdown === null) return;
@@ -587,8 +597,17 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     return () => clearTimeout(t);
   }, [reloadCountdown]);
 
-  const visible = [...allResources, ...localAdditions]
-    .filter(r => !removed.includes(r.id))
+  // Tag each resource with its source so Remove can target the exact occurrence,
+  // not every resource sharing the same ID (important when duplicates exist)
+  const visible = [
+    ...allResources.map(r => ({ ...r, _src: 'base' })),
+    ...localAdditions.map((r, i) => ({ ...r, _src: 'local', _localIdx: i })),
+  ]
+    .filter(r => {
+      if (removed.includes(r.id)) return false;
+      if (r._src === 'local' && localRemovedIdxs.has(r._localIdx)) return false;
+      return true;
+    })
     .sort((a, b) => {
       const aName = (overrides[a.id]?.name || a.name).toLowerCase();
       const bName = (overrides[b.id]?.name || b.name).toLowerCase();
@@ -637,6 +656,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     localStorage.removeItem("cancercompass_removed");
     setOverrides({});
     setRemoved([]);
+    setLocalRemovedIdxs(new Set());
     onSaveSuccess(); // clears localAdditions in AdminPage
     setExportContent("");
     setLocalOnlyMsg("");
@@ -662,13 +682,20 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     const currentRemoved = (() => {
       try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; }
     })();
-    if (Object.keys(pending).length === 0 && currentRemoved.length === 0 && localAdditions.length === 0) {
+    // Only include additions that haven't already been written to the file individually
+    // (_persisted=true means AddResourceSection already wrote them; sending again = duplicate)
+    // Also exclude any locally-removed additions
+    const pendingAdditions = localAdditions
+      .filter((r, i) => !r._persisted && !localRemovedIdxs.has(i))
+      .map(({ _persisted, ...r }) => r); // strip internal flag before sending to API
+
+    if (Object.keys(pending).length === 0 && currentRemoved.length === 0 && pendingAdditions.length === 0) {
       setSaveFileMsg("No pending changes to save.");
       setTimeout(() => setSaveFileMsg(""), 3000);
       return;
     }
     // Show confirmation summary instead of saving immediately
-    setPendingSummary({ pending, removals: currentRemoved, additions: localAdditions });
+    setPendingSummary({ pending, removals: currentRemoved, additions: pendingAdditions });
   }
 
   async function confirmSave() {
@@ -712,12 +739,25 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     setEditing(null);
   }
 
-  function doRemove(id) {
-    const updated = [...removed, id];
-    localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
-    setRemoved(updated);
+  function doRemove(r) {
+    if (r._src === 'local') {
+      // Hide this specific localAdditions entry by index (not ID) so only this
+      // occurrence is removed, not every resource sharing the same ID
+      setLocalRemovedIdxs(prev => new Set([...prev, r._localIdx]));
+      if (r._persisted) {
+        // Resource was already written to the file via the Add form; also remove it from the file
+        const updated = [...removed, r.id];
+        localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
+        setRemoved(updated);
+        saveToFile({}, [r.id]);
+      }
+    } else {
+      const updated = [...removed, r.id];
+      localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
+      setRemoved(updated);
+      saveToFile({}, [r.id]);
+    }
     setRemoveConfirm(null);
-    saveToFile({}, [id]);
   }
 
   function exportOverrides() {
@@ -892,8 +932,10 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
       {visible.map(r => {
         const effective = { ...r, ...(overrides[r.id] || {}) };
         const typeInfo = TYPE_LABELS[effective.type] || { label: effective.type };
+        // Use a unique key per occurrence so duplicate IDs don't cause React key collisions
+        const itemKey = r._src === 'local' ? `local_${r._localIdx}` : r.id;
         return (
-          <div key={r.id} style={{
+          <div key={itemKey} style={{
             border: "1.5px solid #e8e8e4", borderRadius: "10px",
             padding: "14px 18px", marginBottom: "8px", background: "white",
           }}>
@@ -911,7 +953,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
                   borderRadius: "8px", padding: "7px 14px",
                   fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
                 }}>Edit</button>
-                <button onClick={() => setRemoveConfirm(r.id)} style={{
+                <button onClick={() => setRemoveConfirm(r)} style={{
                   background: "#fde8e8", color: "#cc3333", border: "none",
                   borderRadius: "8px", padding: "7px 14px",
                   fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600, cursor: "pointer",
@@ -1009,6 +1051,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
           <div style={{ background: "white", borderRadius: "16px", padding: "28px", maxWidth: "360px", width: "100%", textAlign: "center" }}>
             <div style={{ fontSize: "36px", marginBottom: "12px" }}>⚠️</div>
             <h3 style={{ fontFamily: "'Lora', serif", fontSize: "18px", color: "var(--navy)", marginBottom: "10px" }}>Remove this resource?</h3>
+            <p style={{ fontSize: "14px", color: "var(--navy)", fontWeight: 600, marginBottom: "6px" }}>{removeConfirm?.name}</p>
             <p style={{ fontSize: "14px", color: "#5a5a55", marginBottom: "20px" }}>This will immediately remove it for all users.</p>
             <div style={{ display: "flex", gap: "10px" }}>
               <button onClick={() => setRemoveConfirm(null)} className="btn-ghost" style={{ flex: 1 }}>Cancel</button>
@@ -1033,8 +1076,11 @@ export default function AdminPage() {
   // Lifted here so localAdditions survives tab switches and is visible to both tabs
   const [localAdditions, setLocalAdditions] = useState([]);
 
-  function handleAdd(resource) {
-    setLocalAdditions(prev => [...prev, resource]);
+  function handleAdd(resource, persisted = false) {
+    // persisted=true means it was already written to the file by AddResourceSection
+    // and should NOT be re-sent in the next batch "Save to File" operation
+    const r = persisted ? { ...resource, _persisted: true } : resource;
+    setLocalAdditions(prev => [...prev, r]);
   }
 
   useEffect(() => {
