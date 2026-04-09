@@ -12,6 +12,7 @@ export const RESOURCE_TYPES = [
   { value: "nutrition",      label: "🍎 Nutrition" },
   { value: "pediatric",      label: "👶 Pediatric" },
   { value: "veterans",       label: "🎖️ Veterans" },
+  { id:"n028", name:"Compassion Can't Wait — Urgent Family Assistance Program", description:"Provides urgent financial assistance to single parents of critically or terminally ill children, covering expenses such as rent, mortgage, insurance premiums, funeral costs, and basic necessities so caregivers can remain at their child's bedside during catastrophic illness. Funds are distributed within 24 hours of approval, with social workers serving as the direct contact for families in need.", type:"pediatric", cancerTypes:[], states:[], qualifies:"Single parents of critically or terminally ill children who face financial crisis due to their child's catastrophic illness; referrals are typically made through hospital social workers via a 'request for assistance' form on the website.", phone:null, url:"https://compassioncantwait.org/", lastReviewed:"2026-04-09" },
 ];
 
 export const TYPE_LABELS = {
