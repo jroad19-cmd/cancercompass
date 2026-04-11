@@ -53,10 +53,9 @@ function generateNextId(cancerTypes = [], extraResources = []) {
 }
 
 // ── ADD RESOURCE SECTION ─────────────────────────────────────────────────────
-function AddResourceSection({ saveToFile, onAdd, localAdditions }) {
+function AddResourceSection({ onAdd, localAdditions }) {
   const [url, setUrl]         = useState("");
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving]   = useState(false);
   const [error, setError]     = useState("");
   const [preview, setPreview] = useState(null);
   const [savedName, setSavedName] = useState("");
@@ -123,32 +122,30 @@ function AddResourceSection({ saveToFile, onAdd, localAdditions }) {
     });
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!preview.name || !preview.description) return;
-    setSaving(true);
-    const today      = new Date().toISOString().split("T")[0];
-    const cancerArr  = preview.cancerText.split(",").map(s => s.trim()).filter(Boolean);
-    const statesArr  = preview.statesText.split(",").map(s => s.trim()).filter(Boolean);
+    const today     = new Date().toISOString().split("T")[0];
+    const cancerArr = preview.cancerText.split(",").map(s => s.trim()).filter(Boolean);
+    const statesArr = preview.statesText.split(",").map(s => s.trim()).filter(Boolean);
     const newResource = {
-      id:          preview.id,
-      name:        preview.name,
-      description: preview.description,
-      type:        preview.type,
-      cancerTypes: cancerArr,
-      states:      statesArr,
-      qualifies:   preview.qualifies,
-      phone:       preview.phone || null,
-      url:         preview.url,
+      id:           preview.id,
+      name:         preview.name,
+      description:  preview.description,
+      type:         preview.type,
+      cancerTypes:  cancerArr,
+      states:       statesArr,
+      qualifies:    preview.qualifies,
+      phone:        preview.phone || null,
+      url:          preview.url,
       lastReviewed: today,
     };
-    const ok = await saveToFile({}, [], [newResource]);
-    setSaving(false);
-    if (ok) {
-      onAdd(newResource, true);     // persisted=true: already written to file, skip in batch save
-      setSavedName(preview.name);
-      setPreview(null);
-      setUrl("");
-    }
+    // Only add to the pending local list — do NOT write to GitHub here.
+    // "Save to File" is the sole GitHub write path and will include this resource
+    // in its next batch commit.
+    onAdd(newResource);
+    setSavedName(preview.name);
+    setPreview(null);
+    setUrl("");
   }
 
   const inputStyle = {
@@ -306,15 +303,15 @@ function AddResourceSection({ saveToFile, onAdd, localAdditions }) {
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || !preview.name || !preview.description}
+              disabled={!preview.name || !preview.description}
               style={{
-                background: (saving || !preview.name || !preview.description) ? "#ccc" : "var(--navy)",
+                background: (!preview.name || !preview.description) ? "#ccc" : "var(--navy)",
                 color: "white", border: "none", borderRadius: "8px", padding: "9px 20px",
                 fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
-                cursor: (saving || !preview.name || !preview.description) ? "not-allowed" : "pointer", flex: 1,
+                cursor: (!preview.name || !preview.description) ? "not-allowed" : "pointer", flex: 1,
               }}
             >
-              {saving ? "Saving…" : "💾 Save Permanently"}
+              ➕ Add to Pending List
             </button>
           </div>
         </div>
@@ -698,12 +695,8 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     const currentRemoved = (() => {
       try { return JSON.parse(localStorage.getItem("cancercompass_removed") || "[]"); } catch { return []; }
     })();
-    // Only include additions that haven't already been written to the file individually
-    // (_persisted=true means AddResourceSection already wrote them; sending again = duplicate)
-    // Also exclude any locally-removed additions
-    const pendingAdditions = localAdditions
-      .filter((r, i) => !r._persisted && !localRemovedIdxs.has(i))
-      .map(({ _persisted, ...r }) => r); // strip internal flag before sending to API
+    // All localAdditions that haven't been locally removed are pending writes to the file
+    const pendingAdditions = localAdditions.filter((_, i) => !localRemovedIdxs.has(i));
 
     if (Object.keys(pending).length === 0 && currentRemoved.length === 0 && pendingAdditions.length === 0) {
       setSaveFileMsg("No pending changes to save.");
@@ -757,17 +750,11 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
 
   function doRemove(r) {
     if (r._src === 'local') {
-      // Hide this specific localAdditions entry by index (not ID) so only this
-      // occurrence is removed, not every resource sharing the same ID
+      // Pending (not yet in file) — just drop it from the local list by index.
+      // No file write needed because it was never written to the file.
       setLocalRemovedIdxs(prev => new Set([...prev, r._localIdx]));
-      if (r._persisted) {
-        // Resource was already written to the file via the Add form; also remove it from the file
-        const updated = [...removed, r.id];
-        localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
-        setRemoved(updated);
-        saveToFile({}, [r.id]);
-      }
     } else {
+      // Resource is in resources.js — remove it from the file and hide it locally
       const updated = [...removed, r.id];
       localStorage.setItem("cancercompass_removed", JSON.stringify(updated));
       setRemoved(updated);
@@ -821,7 +808,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
   return (
     <div>
       <HelpSection />
-      <AddResourceSection saveToFile={saveToFile} onAdd={onAdd} localAdditions={localAdditions} />
+      <AddResourceSection onAdd={onAdd} localAdditions={localAdditions} />
 
       {/* Top bar */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center", marginBottom: "16px" }}>
@@ -840,11 +827,11 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
           boxShadow: configOk === false ? "0 2px 8px rgba(212,120,10,0.4)" : "none",
         }}>📋 Export Fixes{configOk === false ? " ← Use This" : ""}</button>
         {configOk !== false && (
-          <button onClick={handleSaveAll} disabled={savingToFile} style={{
-            background: savingToFile ? "#aaa" : "#1a7a4a", color: "white", border: "none",
+          <button onClick={handleSaveAll} disabled={savingToFile || reloadCountdown !== null} style={{
+            background: (savingToFile || reloadCountdown !== null) ? "#aaa" : "#1a7a4a", color: "white", border: "none",
             borderRadius: "8px", padding: "8px 16px",
             fontFamily: "'DM Sans', sans-serif", fontSize: "13px", fontWeight: 600,
-            cursor: savingToFile ? "not-allowed" : "pointer",
+            cursor: (savingToFile || reloadCountdown !== null) ? "not-allowed" : "pointer",
           }}>{savingToFile ? "Saving…" : "💾 Save to File"}</button>
         )}
         <button onClick={handleVerify} disabled={verifying} style={{
@@ -1131,11 +1118,8 @@ export default function AdminPage() {
   // Lifted here so localAdditions survives tab switches and is visible to both tabs
   const [localAdditions, setLocalAdditions] = useState([]);
 
-  function handleAdd(resource, persisted = false) {
-    // persisted=true means it was already written to the file by AddResourceSection
-    // and should NOT be re-sent in the next batch "Save to File" operation
-    const r = persisted ? { ...resource, _persisted: true } : resource;
-    setLocalAdditions(prev => [...prev, r]);
+  function handleAdd(resource) {
+    setLocalAdditions(prev => [...prev, resource]);
   }
 
   useEffect(() => {
