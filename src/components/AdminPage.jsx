@@ -729,7 +729,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
       setOverrides({});
       setRemoved([]);
       setSaveFileMsg(""); // clear the generic success msg; countdown replaces it
-      setReloadCountdown(20);
+      setReloadCountdown(120);
     }
   }
 
@@ -913,7 +913,7 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
           fontSize: "14px", fontWeight: 600, color: "#1a6a3a",
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
-          <span>✅ Saved successfully. Reloading in {reloadCountdown} second{reloadCountdown !== 1 ? "s" : ""} to pick up the latest version…</span>
+          <span>✅ Saved to GitHub — Vercel is deploying. Reloading in {reloadCountdown} second{reloadCountdown !== 1 ? "s" : ""} (~2 min for deploy to complete)…</span>
           <button onClick={() => { setReloadCountdown(null); setSaveFileMsg("✅ Saved. Reload manually when ready."); setTimeout(() => setSaveFileMsg(""), 10000); }} style={{
             background: "none", border: "1px solid #27ae60", borderRadius: "6px",
             padding: "4px 10px", fontSize: "12px", color: "#27ae60", cursor: "pointer",
