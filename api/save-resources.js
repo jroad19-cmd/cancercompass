@@ -6,6 +6,7 @@
 const { validateContent } = require("./_validate");
 
 module.exports = async function handler(req, res) {
+  console.log("SAVE API CALLED", JSON.stringify(req.body).slice(0, 200));
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -19,6 +20,7 @@ module.exports = async function handler(req, res) {
   }
 
   const { changes = {}, removals = [], additions = [] } = req.body || {};
+  console.log(`[save-resources] changes=${Object.keys(changes).length} removals=${removals.length} additions=${additions.length}`, additions.map(r => r && r.id));
 
   const token = process.env.GITHUB_TOKEN;
   const repo  = process.env.GITHUB_REPO; // "owner/repo"
@@ -59,6 +61,14 @@ module.exports = async function handler(req, res) {
   }
 
   if (updated === currentContent) {
+    if (additions.length > 0) {
+      // Additions were provided but the content didn't change — the closing ]; was not found
+      // or the insertion silently failed. Return an error rather than falsely reporting success.
+      console.error(`[save-resources] BUG: content unchanged despite ${additions.length} additions — closing ]; may not have been found`);
+      return res.status(500).json({
+        error: `Failed to insert ${additions.length} resource(s): the resources array closing bracket was not found in the file. No data was written. Check the file structure.`,
+      });
+    }
     return res.status(200).json({ success: true, message: "No changes detected — file unchanged." });
   }
 
@@ -167,9 +177,13 @@ function applyChanges(content, changes, removals, additions) {
     for (let i = lines.length - 1; i >= 0; i--) {
       if (lines[i].trim() === "];") { closingIdx = i; break; }
     }
+    console.log(`[applyChanges] closingIdx=${closingIdx} (total lines=${lines.length})`);
     if (closingIdx !== -1) {
       const newLines = additions.map(r => buildResourceLine(r));
+      console.log(`[applyChanges] Inserting ${newLines.length} resource(s) before line ${closingIdx}`);
       lines.splice(closingIdx, 0, ...newLines);
+    } else {
+      console.error("[applyChanges] ERROR: could not find closing ]; — additions not inserted!");
     }
   }
 

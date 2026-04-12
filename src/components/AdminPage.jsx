@@ -221,7 +221,7 @@ function AddResourceSection({ onAdd, localAdditions }) {
           borderRadius: "10px", padding: "14px 16px", marginTop: "10px",
           fontSize: "13px", color: "#1a6a3a", fontWeight: 600,
         }}>
-          ✅ Resource added successfully — it now appears in the list below. Changes will go live on the site in 2–3 minutes.
+          ✅ Resource added to the pending list — it now appears below. Click <strong>Save to File</strong> above to write it permanently to the site.
           <button onClick={() => setSavedName("")} style={{
             marginLeft: "12px", background: "none", border: "none",
             fontSize: "12px", color: "#27ae60", cursor: "pointer", textDecoration: "underline",
@@ -624,12 +624,19 @@ function ManageTab({ configOk, localAdditions, onAdd, onSaveSuccess }) {
     setSaveFileMsg("");
     try {
       const secret = process.env.REACT_APP_ADMIN_SECRET || "";
+      console.log("[saveToFile] Sending to API:", {
+        changes: Object.keys(changes),
+        removals,
+        additions: additions.map(r => r && r.id),
+        additionCount: additions.length,
+      });
       const res = await fetch("/api/save-resources", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ changes, removals, additions, secret }),
       });
       const json = await res.json();
+      console.log("[saveToFile] API response:", res.status, json);
       if (!res.ok || !json.success) throw new Error(json.error || "Unknown error");
       setLocalOnlyMsg(""); // clear any previous local-only warning on successful save
       setSaveFileMsg("✅ Saved to file! Vercel is deploying — reload the page in ~2 minutes to see the updated data.");
