@@ -365,7 +365,10 @@ export function getFilteredResources(cancerType, state, typeFilter = "all") {
   const filtered = resources.filter(r => {
     const matchesCancer = r.cancerTypes.length === 0 || r.cancerTypes.includes(cancerType);
     const matchesState  = r.states.length === 0 || r.states.includes(state);
-    const matchesType   = typeFilter === "all" || r.type === typeFilter;
+    const AUDIENCE_TYPES = ["pediatric", "veterans"];
+    const matchesType = typeFilter === "all"
+      ? !AUDIENCE_TYPES.includes(r.type)
+      : r.type === typeFilter;
     return matchesCancer && matchesState && matchesType;
   });
 
