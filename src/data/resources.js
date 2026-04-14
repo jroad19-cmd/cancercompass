@@ -361,13 +361,14 @@ export const resources = [
   { id:"n072", name:"Compass to Care — Childhood Cancer Transportation Assistance", description:"Compass to Care provides financial assistance to help children with cancer travel to the hospital for cancer treatment. The organization specifically helps cover transportation costs for pediatric cancer patients who need to travel for medical care.", type:"transportation", cancerTypes:[], states:[], qualifies:"Families with children diagnosed with cancer who need financial assistance to travel to hospital for cancer treatment.", phone:null, url:"https://www.compasstocare.org/", lastReviewed:"2026-04-14" },
 ];
 
-export function getFilteredResources(cancerType, state, typeFilter = "all") {
+export function getFilteredResources(cancerType, state, typeFilter = "all", ageRange = null) {
   const filtered = resources.filter(r => {
     const matchesCancer = r.cancerTypes.length === 0 || r.cancerTypes.includes(cancerType);
     const matchesState  = r.states.length === 0 || r.states.includes(state);
     const AUDIENCE_TYPES = ["pediatric", "veterans"];
+    const isPediatric = ageRange === "Under 18";
     const matchesType = typeFilter === "all"
-      ? !AUDIENCE_TYPES.includes(r.type)
+      ? (!AUDIENCE_TYPES.includes(r.type) || (r.type === "pediatric" && isPediatric))
       : r.type === typeFilter;
     return matchesCancer && matchesState && matchesType;
   });

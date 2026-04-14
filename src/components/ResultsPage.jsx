@@ -122,7 +122,7 @@ ${sections.map(renderSection).join("")}
   }
 
   const { national: rawNational, stateSpecific: rawState, cancerSpecific: rawCancer, total } =
-    getFilteredResources(profile.cancerType, profile.state, typeFilter);
+    getFilteredResources(profile.cancerType, profile.state, typeFilter, profile.ageRange);
 
   // Apply admin overrides and removals
   const removed = JSON.parse(localStorage.getItem("cancercompass_removed") || "[]");
