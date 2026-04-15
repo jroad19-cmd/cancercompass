@@ -116,7 +116,7 @@ export const resources = [
   { id:"brain001", name:"National Brain Tumor Society — Patient Resources", description:"Financial assistance navigation, support groups, and educational resources for brain tumor and CNS cancer patients and their families.", type:"financial", cancerTypes:["Brain / CNS Cancer"], states:[], qualifies:"Brain tumor and CNS cancer patients and caregivers in the United States.", phone:"1-617-924-9997", url:"https://www.braintumor.org", lastReviewed:"2026-02-20" },
 
   // MELANOMA
-  { id:"mel001", name:"Melanoma Research Foundation — Patient Support", description:"Financial support resources, clinical trial information, and peer support connections for melanoma patients and families.", type:"financial", cancerTypes:["Melanoma / Skin Cancer"], states:[], qualifies:"Melanoma patients and their caregivers in the United States.", phone:"1-800-673-1290", url:"https://www.melanoma.org", lastReviewed:"2026-01-28" },
+  { id:"mel001", name:"Melanoma Research Foundation — Patient Support", description:"Financial support resources, clinical trial information, and peer support connections for melanoma patients and families.", type:"financial", cancerTypes:["Melanoma / Skin Cancer"], states:[], qualifies:"Melanoma patients and their caregivers in the United States.", phone:"1-800-673-1290", url:"https://www.curemelanoma.org/", lastReviewed:"2026-01-28" },
 
   // SARCOMA
 
